@@ -12,12 +12,12 @@ class LoginController extends Controller
     {
         $username = $request->username;
         $password = $request->password;
-        $account = DB::table('account')->where(['username' => $username])->first();
+        $account = DB::table('accounts')->where(['username' => $username])->first();
         if ($account) {
             $checkPassword = Hash::check($password, $account->password);
             if ($checkPassword) {
                 return response()->json([
-                    'status' => 'success', 'username' => $account->username
+                    'status' => 'success', 'username' => $account->username, 'account_id' => $account->id
                 ]);
             } else {
                 return response()->json([
