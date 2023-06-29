@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\APIController;
+use App\Http\Controllers\LoginController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,4 +19,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::post('/trylogin', [LoginController::class, 'TryLogin']);
+
 Route::get('/reports', [APIController::class, 'Report']);
+Route::get('/statistics/listeners', [APIController::class, 'StatisticsListeners']);
