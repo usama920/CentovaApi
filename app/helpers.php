@@ -17,3 +17,12 @@ function format_size($size)
     }
     return $size;
 }
+
+function format_time($seconds, $sessions)
+{
+    if ($seconds > 59) {
+        return round(($seconds / $sessions) / 60, 1) . ' minute(s)';
+    } else {
+        return $seconds / $sessions . ' second(s)';
+    }
+}

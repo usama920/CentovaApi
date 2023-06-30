@@ -30,7 +30,7 @@ class APIController extends Controller
         ]);
         try {
             $subDays = $request->days ? $request->days : 14;
-            $account_id = $request->account_id ? $request->account_id : null;
+            $account_id = $request->account_id ? $request->account_id : 163;
             $subDaysTime = Carbon::today()->subDays($subDays);
             $visitorSessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->get();
             $total_seconds = 0;
@@ -43,13 +43,14 @@ class APIController extends Controller
             $total_minutes = round($total_seconds / 60);
             $total_hours = round($total_minutes / 60, 1);
             $total_sessions = count($visitorSessions);
-
+            $average_session_time = $total_seconds > 0 ? format_time($total_seconds, $total_sessions) : 0;
             $average_data_transfer = $total_data > 0 && $total_sessions > 0 ? format_size($total_data / $total_sessions) : format_size($total_data);
             $uniqueIpSessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('ipaddress')->get();
             $uniqueCountrySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('country')->get();
+
             // return response()->json(count($uniqueCountrySessions));
 
-            return response()->json(['total_minutes' => $total_minutes, 'total_hours' => $total_hours, 'total_sessions' => $total_sessions, 'uniqueIpSessions' => count($uniqueIpSessions), 'uniqueCountrySessions' => count($uniqueCountrySessions), 'total_data_transfer' => format_size($total_data), 'average_data_transfer' => $average_data_transfer]);
+            return response()->json(['total_minutes' => $total_minutes, 'total_hours' => $total_hours, 'total_sessions' => $total_sessions, 'average_session_time' => $average_session_time, 'uniqueIpSessions' => count($uniqueIpSessions), 'uniqueCountrySessions' => count($uniqueCountrySessions), 'total_data_transfer' => format_size($total_data), 'average_data_transfer' => $average_data_transfer]);
         } catch (Throwable $th) {
             return response()->json($th->getMessage());
         }
