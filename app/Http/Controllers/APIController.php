@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Track;
 use App\Models\VisitorStatsSessions;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -62,5 +63,19 @@ class APIController extends Controller
         $countriesStatsBySession = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('country')->select('country', DB::raw('count(*) as total'))->orderBy('total', 'DESC')->get();
         $countriesStatsByMinutes = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('country')->select('country', DB::raw('sum(duration) as total'))->orderBy('total', 'DESC')->get();
         return response()->json(['countriesStatsByMinutes' => $countriesStatsByMinutes, 'countriesStatsBySession' => $countriesStatsBySession]);
+    }
+
+    public function StatisticsTracks(Request $request)
+    {
+        $request->validate([
+            'days' => 'required',
+            'account_id' => 'required'
+        ]);
+        $subDays = $request->days ? $request->days : 14;
+        $account_id = $request->account_id ? $request->account_id : 163;
+        $subDaysTime = Carbon::today()->subDays($subDays);
+
+        $tracks = Track::where(['accountid' => $account_id])->count();
+        return response()->json(['unique_tracks' => $tracks]);
     }
 }
