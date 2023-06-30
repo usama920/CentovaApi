@@ -24,9 +24,13 @@ class APIController extends Controller
     public function StatisticsListeners(Request $request)
     {
         set_time_limit(60000);
+        $request->validate([
+            'days' => 'required',
+            'account_id' => 'required'
+        ]);
         try {
             $subDays = $request->days ? $request->days : 14;
-            $account_id = $request->account_id ? $request->account_id : 163;
+            $account_id = $request->account_id ? $request->account_id : null;
             $subDaysTime = Carbon::today()->subDays($subDays);
             $visitorSessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->get();
             $total_seconds = 0;
