@@ -48,11 +48,18 @@ class APIController extends Controller
             $uniqueIpSessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('ipaddress')->get();
             $uniqueCountrySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('country')->get();
 
-            // return response()->json(count($uniqueCountrySessions));
-
             return response()->json(['total_minutes' => $total_minutes, 'total_hours' => $total_hours, 'total_sessions' => $total_sessions, 'average_session_time' => $average_session_time, 'uniqueIpSessions' => count($uniqueIpSessions), 'uniqueCountrySessions' => count($uniqueCountrySessions), 'total_data_transfer' => format_size($total_data), 'average_data_transfer' => $average_data_transfer]);
         } catch (Throwable $th) {
             return response()->json($th->getMessage());
         }
+    }
+
+    public function StatisticsCountries(Request $request)
+    {
+        $subDays = $request->days ? $request->days : 14;
+        $account_id = $request->account_id ? $request->account_id : 163;
+        $subDaysTime = Carbon::today()->subDays($subDays);
+        $countriesStats = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('country')->select('country', DB::raw('count(*) as total'))->orderBy('total', 'DESC')->get();
+        return response()->json(['countriesStats' => $countriesStats]);
     }
 }

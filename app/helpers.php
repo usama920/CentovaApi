@@ -1,5 +1,12 @@
 <?php
 
+function prx($value)
+{
+    echo "<pre>";
+    print_r($value);
+    die;
+}
+
 function format_size($size)
 {
     if ($size >= 1073741824) {

@@ -23,3 +23,4 @@ Route::post('/trylogin', [LoginController::class, 'TryLogin']);
 
 Route::get('/reports', [APIController::class, 'Report']);
 Route::post('/statistics/listeners', [APIController::class, 'StatisticsListeners']);
+Route::post('/statistics/countries', [APIController::class, 'StatisticsCountries']);
