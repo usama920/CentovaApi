@@ -36,7 +36,7 @@ class APIController extends Controller
         $total_minutes = round($total_seconds / 60);
         $total_hours = round($total_minutes / 60, 1);
         $total_sessions = count($visitorSessions);
-        return response()->json($request->post());
+        // return response()->json($request->post());
 
         $uniqueIpSessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('ipaddress')->count();
 
