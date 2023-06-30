@@ -38,9 +38,9 @@ class APIController extends Controller
         $total_sessions = count($visitorSessions);
         // return response()->json($request->post());
 
-        $uniqueIpSessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('ipaddress')->count();
+        $uniqueIpSessions = VisitorStatsSessions::where(['accountid' => $account_id])->groupBy('ipaddress')->count();
 
-        $uniqueCountrySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('country')->count();
+        $uniqueCountrySessions = VisitorStatsSessions::where(['accountid' => $account_id])->groupBy('country')->count();
 
         return response()->json(['total_minutes' => $total_minutes, 'total_hours' => $total_hours, 'total_sessions' => $total_sessions, 'uniqueIpSessions' => $uniqueIpSessions, 'uniqueCountrySessions' => $uniqueCountrySessions, 'total_data_transfer' => format_size($total_data), 'average_data_transfer' => format_size($total_data / $total_sessions)]);
     }
