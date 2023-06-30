@@ -6,6 +6,7 @@ use App\Models\VisitorStatsSessions;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class APIController extends Controller
 {
@@ -39,14 +40,14 @@ class APIController extends Controller
             $total_sessions = count($visitorSessions);
 
             $average_data_transfer = $total_data > 0 && $total_sessions > 0 ? format_size($total_data / $total_sessions) : format_size($total_data);
-            $uniqueIpSessions = VisitorStatsSessions::where(['accountid' => $account_id])->groupBy('ipaddress')->count();
+            $uniqueIpSessions = VisitorStatsSessions::where(['accountid' => $account_id])->count();
             return response()->json($total_data);
 
             $uniqueCountrySessions = VisitorStatsSessions::where(['accountid' => $account_id])->groupBy('country')->count();
 
             return response()->json(['total_minutes' => $total_minutes, 'total_hours' => $total_hours, 'total_sessions' => $total_sessions, 'uniqueIpSessions' => $uniqueIpSessions, 'uniqueCountrySessions' => $uniqueCountrySessions, 'total_data_transfer' => format_size($total_data), 'average_data_transfer' => $average_data_transfer]);
-        } catch (\Throwable $th) {
-            return response()->json($th);
+        } catch (Throwable $th) {
+            return response()->json($th->getMessage());
         }
     }
 }
