@@ -40,10 +40,9 @@ class APIController extends Controller
             $total_sessions = count($visitorSessions);
 
             $average_data_transfer = $total_data > 0 && $total_sessions > 0 ? format_size($total_data / $total_sessions) : format_size($total_data);
+            return response()->json($visitorSessions);
             $uniqueIpSessions = VisitorStatsSessions::where(['accountid' => $account_id])->groupBy('ipaddress')->count();
-            print_r($uniqueIpSessions);
-            die;
-            return response()->json($uniqueIpSessions);
+
 
             $uniqueCountrySessions = VisitorStatsSessions::where(['accountid' => $account_id])->groupBy('country')->count();
 
