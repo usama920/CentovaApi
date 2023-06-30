@@ -20,11 +20,12 @@ class APIController extends Controller
         dd($result);
     }
 
-    public function StatisticsListeners()
+    public function StatisticsListeners(Request $request)
     {
-        $subDays = 14;
+        $subDays = $request->days ? $request->days : 14;
+        $account_id = $request->account_id ? $request->account_id : null;
         $subDaysTime = Carbon::today()->subDays($subDays);
-        $visitorSessions = VisitorStatsSessions::where(['accountid' => 5])->where('starttime', '>=', $subDaysTime)->get();
+        $visitorSessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->get();
         $total_seconds = 0;
         $total_data = 0;
 
@@ -37,9 +38,9 @@ class APIController extends Controller
         $total_sessions = count($visitorSessions);
 
 
-        $uniqueIpSessions = VisitorStatsSessions::where(['accountid' => 5])->where('starttime', '>=', $subDaysTime)->groupBy('ipaddress')->count();
+        $uniqueIpSessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('ipaddress')->count();
 
-        $uniqueCountrySessions = VisitorStatsSessions::where(['accountid' => 5])->where('starttime', '>=', $subDaysTime)->groupBy('country')->count();
+        $uniqueCountrySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('country')->count();
 
         return response()->json(['total_minutes' => $total_minutes, 'total_hours' => $total_hours, 'total_sessions' => $total_sessions, 'uniqueIpSessions' => $uniqueIpSessions, 'uniqueCountrySessions' => $uniqueCountrySessions, 'total_data_transfer' => format_size($total_data), 'average_data_transfer' => format_size($total_data / $total_sessions)]);
     }
