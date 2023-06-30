@@ -38,11 +38,11 @@ class APIController extends Controller
             $total_hours = round($total_minutes / 60, 1);
             $total_sessions = count($visitorSessions);
 
-            $average_data_transfer = $total_data > 0 ? format_size($total_data / $total_sessions) : format_size($total_data);
+            $average_data_transfer = $total_data > 0 && $total_sessions > 0 ? format_size($total_data / $total_sessions) : format_size($total_data);
+            return response()->json($total_data);
             $uniqueIpSessions = VisitorStatsSessions::where(['accountid' => $account_id])->groupBy('ipaddress')->count();
 
             $uniqueCountrySessions = VisitorStatsSessions::where(['accountid' => $account_id])->groupBy('country')->count();
-            return response()->json($total_data);
 
             return response()->json(['total_minutes' => $total_minutes, 'total_hours' => $total_hours, 'total_sessions' => $total_sessions, 'uniqueIpSessions' => $uniqueIpSessions, 'uniqueCountrySessions' => $uniqueCountrySessions, 'total_data_transfer' => format_size($total_data), 'average_data_transfer' => $average_data_transfer]);
         } catch (\Throwable $th) {
