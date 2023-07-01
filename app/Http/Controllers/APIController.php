@@ -89,7 +89,7 @@ class APIController extends Controller
         $account_id = $request->account_id ? $request->account_id : 163;
         $subDaysTime = Carbon::today()->subDays($subDays);
 
-        $userAgentsBySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('useragentid')->with('userAgents')->select('useragentid', DB::raw('count(*) as total'))->orderBy('total', 'DESC')->get();
+        $userAgentsBySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('useragentid')->with('userAgents')->select('useragentid', DB::raw('count(*) as total'),  DB::raw('sum(bandwidth) as bandwidth'))->orderBy('total', 'DESC')->get();
         return response()->json(['userAgentsBySessions' => $userAgentsBySessions]);
     }
 }
