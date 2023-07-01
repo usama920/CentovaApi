@@ -78,4 +78,18 @@ class APIController extends Controller
         $tracks = Track::where(['accountid' => $account_id])->count();
         return response()->json(['unique_tracks' => $tracks]);
     }
+
+    public function  StatisticsUserAgents(Request $request)
+    {
+        $request->validate([
+            'days' => 'required',
+            'account_id' => 'required'
+        ]);
+        $subDays = $request->days ? $request->days : 14;
+        $account_id = $request->account_id ? $request->account_id : 163;
+        $subDaysTime = Carbon::today()->subDays($subDays);
+
+        $userAgentsBySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('useragentid')->with('userAgents')->select('useragentid', DB::raw('count(*) as total'))->orderBy('total', 'DESC')->get();
+        return response()->json(['userAgentsBySessions' => $userAgentsBySessions]);
+    }
 }

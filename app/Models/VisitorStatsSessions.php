@@ -21,4 +21,9 @@ class VisitorStatsSessions extends Model
         'country',
         'resumedata'
     ];
+
+    public function userAgents()
+    {
+        return $this->hasOne(VisitorStatsAgents::class, 'id', 'useragentid');
+    }
 }
