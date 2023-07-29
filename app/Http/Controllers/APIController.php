@@ -142,7 +142,7 @@ class APIController extends Controller
 
         $peakListeners = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy(DB::raw('Date(starttime)'))->select('starttime', DB::raw('count(*) as totalSessions'), DB::raw('sum(duration) as totalDuration'), DB::raw('sum(bandwidth) as totalBandwidth'))->orderBy('starttime', 'ASC')->get()->map(function ($expense) {
             return [
-                'created_at' => date("d-m-Y", strtotime($expense->starttime)),
+                'created_at' => date("d/m", strtotime($expense->starttime)),
                 'totalDuration' => $expense->totalDuration,
                 'totalSessions' => $expense->totalSessions,
                 'totalBandwidth' => $expense->totalBandwidth,
