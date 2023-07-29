@@ -150,6 +150,10 @@ class APIController extends Controller
             ];
         })->toArray();
 
+        foreach ($peakListeners as $key => $listener) {
+            $peakListeners[$key]['formattedBandwidth'] = format_size($listener['totalBandwidth']);
+        }
+
         // $peakListenerMinutes = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy(DB::raw('Date(starttime)'))->select('starttime', DB::raw('sum(duration) as totalDuration'))->orderBy('starttime', 'ASC')->get();
 
         // $peakDataTransfer = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy(DB::raw('Date(starttime)'))->select('starttime', DB::raw('sum(bandwidth) as totalBandwidth'))->orderBy('starttime', 'ASC')->get();
