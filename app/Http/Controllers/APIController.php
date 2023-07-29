@@ -33,6 +33,18 @@ class APIController extends Controller
             $subDays = $request->days ? $request->days : 14;
             $account_id = $request->account_id ? $request->account_id : 163;
             $subDaysTime = Carbon::today()->subDays($subDays);
+
+            $topVisitorsBySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->with('userAgents')->select('ipaddress', 'country', DB::raw('count(*) as totalSessions'), DB::raw('sum(bandwidth) as totalBandwidth'))->orderBy('totalSessions', 'DESC')->groupBy('ipaddress')->limit(10)->get();
+            foreach ($topVisitorsBySessions as $key => $session) {
+                $topVisitorsBySessions[$key]['ip'] = long2ip($session->ipaddress);
+            }
+
+            $topVisitorsByMinutes = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->with('userAgents')->select('ipaddress', 'country', DB::raw('sum(bandwidth) as totalBandwidth'),  DB::raw('sum(duration) as totalDuration'))->orderBy('totalDuration', 'DESC')->groupBy('ipaddress')->limit(10)->get();
+            foreach ($topVisitorsByMinutes as $key => $session) {
+                $topVisitorsByMinutes[$key]['ip'] = long2ip($session->ipaddress);
+                $topVisitorsByMinutes[$key]['totalDurationInMinutes'] = round($session->duration / 60);
+            }
+
             $visitorSessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->get();
             $total_seconds = 0;
             $total_data = 0;
@@ -69,9 +81,7 @@ class APIController extends Controller
             $uniqueCountrySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('country')->get();
 
 
-
-
-            return response()->json(['total_minutes' => $total_minutes, 'total_hours' => $total_hours, 'total_sessions' => $total_sessions, 'average_session_time' => $average_session_time, 'uniqueIpSessions' => count($uniqueIpSessions), 'uniqueCountrySessions' => count($uniqueCountrySessions), 'total_data_transfer' => format_size($total_data), 'average_data_transfer' => $average_data_transfer, 'session_length_intervals' => $session_length_intervals]);
+            return response()->json(['total_minutes' => $total_minutes, 'total_hours' => $total_hours, 'total_sessions' => $total_sessions, 'average_session_time' => $average_session_time, 'uniqueIpSessions' => count($uniqueIpSessions), 'uniqueCountrySessions' => count($uniqueCountrySessions), 'total_data_transfer' => format_size($total_data), 'average_data_transfer' => $average_data_transfer, 'session_length_intervals' => $session_length_intervals, 'topVisitorsBySessions' => $topVisitorsBySessions, 'topVisitorsByMinutes' => $topVisitorsByMinutes]);
         } catch (Throwable $th) {
             return response()->json($th->getMessage());
         }
