@@ -43,8 +43,8 @@ class APIController extends Controller
             $topVisitorsByMinutes = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->with('userAgents')->select('ipaddress', 'country', DB::raw('sum(bandwidth) as totalBandwidth'),  DB::raw('sum(duration) as totalDuration'))->orderBy('totalDuration', 'DESC')->groupBy('ipaddress')->limit(10)->get();
             foreach ($topVisitorsByMinutes as $key => $session) {
                 $topVisitorsByMinutes[$key]['ip'] = long2ip($session->ipaddress);
-                $topVisitorsByMinutes[$key]['totalDurationInMinutes'] = round($session->duration / 60);
-                $topVisitorsBySessions[$key]['totalFormattedbandwidth'] = format_size($session->totalBandwidth);
+                $topVisitorsByMinutes[$key]['totalDurationInMinutes'] = round($session->totalDuration / 60);
+                $topVisitorsByMinutes[$key]['totalFormattedbandwidth'] = format_size($session->totalBandwidth);
             }
 
             $visitorSessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->get();
