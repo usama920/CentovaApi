@@ -37,7 +37,7 @@ class APIController extends Controller
             $total_seconds = 0;
             $total_data = 0;
 
-            $session_length_intervals = ['zeroTo30Sec' => 0, '30SecTo2Min' => 0, '2MinTo5Min' => 0, '5MinTo15Min' => 0, '15MinTO30Min' => 0, '30MinTo1Hour' => 0, '1HourTo4Hour' => 0, 'Above4Hour' => 0];
+            $session_length_intervals = ['zeroTo30Sec' => 0, 'ThirtySecToTwoMin' => 0, 'TwoMinToFiveMin' => 0, 'FiveMinToFifteenMin' => 0, 'FifteenMinTOThirtyMin' => 0, 'ThirtyMinToOneHour' => 0, 'OneHourToFourHour' => 0, 'AboveFourHour' => 0];
 
             foreach ($visitorSessions as $session) {
                 $total_seconds += $session->duration;
@@ -45,19 +45,19 @@ class APIController extends Controller
                 if ($session->duration <= 30) {
                     $session_length_intervals['zeroTo30Sec']++;
                 } elseif ($session->duration <= 120) {
-                    $session_length_intervals['30SecTo2Min']++;
+                    $session_length_intervals['ThirtySecToTwoMin']++;
                 } elseif ($session->duration <= 300) {
-                    $session_length_intervals['2MinTo5Min']++;
+                    $session_length_intervals['TwoMinToFiveMin']++;
                 } elseif ($session->duration <= 900) {
-                    $session_length_intervals['5MinTo15Min']++;
+                    $session_length_intervals['FiveMinToFifteenMin']++;
                 } elseif ($session->duration <= 1800) {
-                    $session_length_intervals['15MinTO30Min']++;
+                    $session_length_intervals['FifteenMinTOThirtyMin']++;
                 } elseif ($session->duration <= 3600) {
-                    $session_length_intervals['30MinTo1Hour']++;
+                    $session_length_intervals['ThirtyMinToOneHour']++;
                 } elseif ($session->duration <= 10800) {
-                    $session_length_intervals['1HourTo4Hour']++;
+                    $session_length_intervals['OneHourToFourHour']++;
                 } elseif ($session->duration > 10800) {
-                    $session_length_intervals['Above4Hour']++;
+                    $session_length_intervals['AboveFourHour']++;
                 }
             }
             $total_minutes = round($total_seconds / 60);
