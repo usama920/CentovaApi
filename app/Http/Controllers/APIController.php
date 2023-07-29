@@ -37,15 +37,15 @@ class APIController extends Controller
             $total_seconds = 0;
             $total_data = 0;
 
-            $session_length_intervals = ['zeroTo30Sec' => 0, '30SecTo1Min' => 0, '2MinTo5Min' => 0, '5MinTo15Min' => 0, '15MinTO30Min' => 0, '30MinTo1Hour' => 0, '1HourTo4Hour' => 0, 'Above4Hour' => 0];
+            $session_length_intervals = ['zeroTo30Sec' => 0, '30SecTo2Min' => 0, '2MinTo5Min' => 0, '5MinTo15Min' => 0, '15MinTO30Min' => 0, '30MinTo1Hour' => 0, '1HourTo4Hour' => 0, 'Above4Hour' => 0];
 
             foreach ($visitorSessions as $session) {
                 $total_seconds += $session->duration;
                 $total_data += $session->bandwidth;
                 if ($session->duration <= 30) {
                     $session_length_intervals['zeroTo30Sec']++;
-                } elseif ($session->duration <= 60) {
-                    $session_length_intervals['30SecTo1Min']++;
+                } elseif ($session->duration <= 120) {
+                    $session_length_intervals['30SecTo2Min']++;
                 } elseif ($session->duration <= 300) {
                     $session_length_intervals['2MinTo5Min']++;
                 } elseif ($session->duration <= 900) {
