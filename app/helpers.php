@@ -9,18 +9,16 @@ function prx($value)
 
 function format_size($size)
 {
-    if ($size >= 1073741824) {
-        $size = number_format($size / 1073741824, 2) . ' GB';
-    } elseif ($size >= 1048576) {
-        $size = number_format($size / 1048576, 2) . ' MB';
+    if ($size >= 1048576) {
+        $size = number_format($size / 1048576, 2) . ' GB';
     } elseif ($size >= 1024) {
-        $size = number_format($size / 1024, 2) . ' KB';
+        $size = number_format($size / 1024, 2) . ' MB';
     } elseif ($size > 1) {
-        $size = $size . ' Bytes';
+        $size = $size . ' KB';
     } elseif ($size == 1) {
-        $size = $size . ' Byte';
+        $size = $size . ' KB';
     } else {
-        $size = '0 Bytes';
+        $size = '0 KB';
     }
     return $size;
 }
