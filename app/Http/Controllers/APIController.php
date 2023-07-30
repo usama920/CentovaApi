@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Playlists;
 use App\Models\Track;
+use App\Models\TrackHistory;
 use App\Models\VisitorStatsSessions;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -110,8 +112,25 @@ class APIController extends Controller
         $account_id = $request->account_id ? $request->account_id : 163;
         $subDaysTime = Carbon::today()->subDays($subDays);
 
-        $tracks = Track::where(['accountid' => $account_id])->count();
-        return response()->json(['unique_tracks' => $tracks]);
+        $playbackStats = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->get();
+        $total_tracks = count($playbackStats);
+        $total_duration = 0;
+        $average_length = 0;
+        if ($total_tracks > 0) {
+            $total_duration = $playbackStats->sum('duration');
+            $average_length = round($total_duration / $total_tracks);
+        }
+
+        $user_Tracks = Track::where(['accountid' => $account_id])->get();
+        $unique_tracks = count($user_Tracks);
+        // $playlists = Playlists::where(['accountid' => $account_id])->with('playlistTracks')->get()->toArray();
+        // $tracks = 0;
+        // foreach ($playlists as $playlist) {
+        //     if (isset($playlist['playlist_tracks']) && $playlist['playlist_tracks'] != null) {
+        //         $tracks += count($playlist['playlist_tracks']);
+        //     }
+        // }
+        return response()->json(['total_tracks' => $total_tracks, 'unique_tracks' => $unique_tracks, 'average_length' => $average_length]);
     }
 
     public function  StatisticsUserAgents(Request $request)
@@ -150,23 +169,7 @@ class APIController extends Controller
             ];
         })->toArray();
 
-        foreach ($peakListeners as $key => $listener) {
-            $peakListeners[$key]['formattedBandwidth'] = format_size($listener['totalBandwidth']);
-        }
-
-        // $peakListenerMinutes = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy(DB::raw('Date(starttime)'))->select('starttime', DB::raw('sum(duration) as totalDuration'))->orderBy('starttime', 'ASC')->get();
-
-        // $peakDataTransfer = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy(DB::raw('Date(starttime)'))->select('starttime', DB::raw('sum(bandwidth) as totalBandwidth'))->orderBy('starttime', 'ASC')->get();
-
-        $averageListenersPerHour = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', Carbon::today()->subDays(7))->orderBy('starttime', 'ASC')->get();
-
-        // $peakListeners = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy(DB::raw('Date(starttime)'))->orderBy('starttime', 'ASC')->get()->map(function ($expense) {
-        //     return [
-        //         'created_at' => date("d-m-Y", strtotime($expense->starttime)),
-        //         'ip' => $expense->ipaddress
-        //     ];
-        // })->toArray();
         $unique = array_unique($peakListeners, SORT_REGULAR);
-        return response()->json(['peakListeners' => $peakListeners, 'unique' => $unique, 'averageListenersPerHour' => $averageListenersPerHour, 'subDaysTime' => $subDaysTime]);
+        return response()->json(['peakListeners' => $peakListeners, 'unique' => $unique, 'subDaysTime' => $subDaysTime]);
     }
 }
