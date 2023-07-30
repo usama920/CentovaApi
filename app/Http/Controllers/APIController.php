@@ -248,6 +248,7 @@ class APIController extends Controller
         if (isset($request->from_date) && $request->from_date != null && isset($request->to_date) && $request->to_date != null) {
             $period_from = $startDate = Carbon::createFromFormat('Y-m-d', $request->from_date)->startOfDay();
             $period_to = $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
+            $period_to = $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
         }
 
         if ($startDate && $endDate) {
