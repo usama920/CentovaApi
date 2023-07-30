@@ -123,6 +123,10 @@ class APIController extends Controller
 
         $user_Tracks = Track::where(['accountid' => $account_id])->get();
         $unique_tracks = count($user_Tracks);
+
+        $topTracksByPlayback = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->groupBy('name')->select('name', DB::raw('count(*) as playbacks'))->orderBy('playbacks', 'DESC')->limit(10)->get();
+
+        $topTracksByAirTime = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->groupBy('name')->select('name', DB::raw('sum(duration) as totalDuration'))->orderBy('totalDuration', 'DESC')->limit(10)->get();
         // $playlists = Playlists::where(['accountid' => $account_id])->with('playlistTracks')->get()->toArray();
         // $tracks = 0;
         // foreach ($playlists as $playlist) {
@@ -130,7 +134,7 @@ class APIController extends Controller
         //         $tracks += count($playlist['playlist_tracks']);
         //     }
         // }
-        return response()->json(['total_tracks' => $total_tracks, 'unique_tracks' => $unique_tracks, 'average_length' => $average_length]);
+        return response()->json(['topTracksByAirTime' => $topTracksByAirTime, 'topTracksByPlayback' => $topTracksByPlayback, 'total_tracks' => $total_tracks, 'unique_tracks' => $unique_tracks, 'average_length' => $average_length, 'topTracksByAirTime' => $topTracksByAirTime]);
     }
 
     public function  StatisticsUserAgents(Request $request)
