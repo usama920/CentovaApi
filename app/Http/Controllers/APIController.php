@@ -27,32 +27,52 @@ class APIController extends Controller
 
     public function StatisticsListeners(Request $request)
     {
-        set_time_limit(60000);
         $request->validate([
-            'days' => 'required',
             'account_id' => 'required'
         ]);
+
         try {
             $subDays = $request->days ? $request->days : 14;
-            $account_id = $request->account_id ? $request->account_id : 163;
+            $account_id = $request->account_id ? $request->account_id : null;
             $subDaysTime = Carbon::today()->subDays($subDays);
 
-            $topVisitorsBySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->with('userAgents')->select('ipaddress', 'country', DB::raw('count(*) as totalSessions'), DB::raw('sum(bandwidth) as totalBandwidth'))->orderBy('totalSessions', 'DESC')->groupBy('ipaddress')->limit(10)->get();
+            $startDate = null;
+            $endDate = null;
+            if (isset($request->from_date) && $request->from_date != null && isset($request->to_date) && $request->to_date != null) {
+                $startDate = Carbon::createFromFormat('Y-m-d', $request->from_date)->startOfDay();
+                $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
+            }
+
+            if ($startDate && $endDate) {
+                $topVisitorsBySessions = VisitorStatsSessions::where(['accountid' => $account_id])->whereBetween('starttime', [$startDate, $endDate])->with('userAgents')->select('ipaddress', 'country', DB::raw('count(*) as totalSessions'), DB::raw('sum(bandwidth) as totalBandwidth'))->orderBy('totalSessions', 'DESC')->groupBy('ipaddress')->limit(10)->get();
+
+                $topVisitorsByMinutes = VisitorStatsSessions::where(['accountid' => $account_id])->whereBetween('starttime', [$startDate, $endDate])->with('userAgents')->select('ipaddress', 'country', DB::raw('sum(bandwidth) as totalBandwidth'),  DB::raw('sum(duration) as totalDuration'))->orderBy('totalDuration', 'DESC')->groupBy('ipaddress')->limit(10)->get();
+            } else {
+                $topVisitorsBySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->with('userAgents')->select('ipaddress', 'country', DB::raw('count(*) as totalSessions'), DB::raw('sum(bandwidth) as totalBandwidth'))->orderBy('totalSessions', 'DESC')->groupBy('ipaddress')->limit(10)->get();
+
+                $topVisitorsByMinutes = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->with('userAgents')->select('ipaddress', 'country', DB::raw('sum(bandwidth) as totalBandwidth'),  DB::raw('sum(duration) as totalDuration'))->orderBy('totalDuration', 'DESC')->groupBy('ipaddress')->limit(10)->get();
+            }
+
             foreach ($topVisitorsBySessions as $key => $session) {
                 $topVisitorsBySessions[$key]['ip'] = long2ip($session->ipaddress);
                 $topVisitorsBySessions[$key]['totalFormattedbandwidth'] = format_size($session->totalBandwidth);
             }
 
-            $topVisitorsByMinutes = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->with('userAgents')->select('ipaddress', 'country', DB::raw('sum(bandwidth) as totalBandwidth'),  DB::raw('sum(duration) as totalDuration'))->orderBy('totalDuration', 'DESC')->groupBy('ipaddress')->limit(10)->get();
             foreach ($topVisitorsByMinutes as $key => $session) {
                 $topVisitorsByMinutes[$key]['ip'] = long2ip($session->ipaddress);
                 $topVisitorsByMinutes[$key]['totalDurationInMinutes'] = round($session->totalDuration / 60);
                 $topVisitorsByMinutes[$key]['totalFormattedbandwidth'] = format_size($session->totalBandwidth);
             }
 
-            $visitorSessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->get();
-            $total_seconds = 0;
-            $total_data = 0;
+            if ($startDate && $endDate) {
+                $visitorSessions = VisitorStatsSessions::where(['accountid' => $account_id])->whereBetween('starttime', [$startDate, $endDate])->get();
+                $total_seconds = 0;
+                $total_data = 0;
+            } else {
+                $visitorSessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->get();
+                $total_seconds = 0;
+                $total_data = 0;
+            }
 
             $session_length_intervals = ['zeroTo30Sec' => 0, 'ThirtySecToTwoMin' => 0, 'TwoMinToFiveMin' => 0, 'FiveMinToFifteenMin' => 0, 'FifteenMinTOThirtyMin' => 0, 'ThirtyMinToOneHour' => 0, 'OneHourToFourHour' => 0, 'AboveFourHour' => 0];
 
@@ -82,8 +102,14 @@ class APIController extends Controller
             $total_sessions = count($visitorSessions);
             $average_session_time = $total_seconds > 0 ? format_time($total_seconds, $total_sessions) : 0;
             $average_data_transfer = $total_data > 0 && $total_sessions > 0 ? format_size($total_data / $total_sessions) : format_size($total_data);
-            $uniqueIpSessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('ipaddress')->get();
-            $uniqueCountrySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('country')->get();
+
+            if ($startDate && $endDate) {
+                $uniqueIpSessions = VisitorStatsSessions::where(['accountid' => $account_id])->whereBetween('starttime', [$startDate, $endDate])->groupBy('ipaddress')->get();
+                $uniqueCountrySessions = VisitorStatsSessions::where(['accountid' => $account_id])->whereBetween('starttime', [$startDate, $endDate])->groupBy('country')->get();
+            } else {
+                $uniqueIpSessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('ipaddress')->get();
+                $uniqueCountrySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('country')->get();
+            }
 
 
             return response()->json(['total_minutes' => $total_minutes, 'total_hours' => $total_hours, 'total_sessions' => $total_sessions, 'average_session_time' => $average_session_time, 'uniqueIpSessions' => count($uniqueIpSessions), 'uniqueCountrySessions' => count($uniqueCountrySessions), 'total_data_transfer' => format_size($total_data), 'average_data_transfer' => $average_data_transfer, 'session_length_intervals' => $session_length_intervals, 'topVisitorsBySessions' => $topVisitorsBySessions, 'topVisitorsByMinutes' => $topVisitorsByMinutes]);
@@ -94,11 +120,27 @@ class APIController extends Controller
 
     public function StatisticsCountries(Request $request)
     {
+        $request->validate([
+            'account_id' => 'required'
+        ]);
         $subDays = $request->days ? $request->days : 14;
-        $account_id = $request->account_id ? $request->account_id : 163;
+        $account_id = $request->account_id ? $request->account_id : null;
         $subDaysTime = Carbon::today()->subDays($subDays);
-        $countriesStatsBySession = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('country')->select('country', DB::raw('count(*) as total'))->orderBy('total', 'DESC')->get();
-        $countriesStatsByMinutes = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('country')->select('country', DB::raw('sum(duration) as total'))->orderBy('total', 'DESC')->get();
+
+        $startDate = null;
+        $endDate = null;
+        if (isset($request->from_date) && $request->from_date != null && isset($request->to_date) && $request->to_date != null) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $request->from_date)->startOfDay();
+            $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
+        }
+
+        if ($startDate && $endDate) {
+            $countriesStatsBySession = VisitorStatsSessions::where(['accountid' => $account_id])->whereBetween('starttime', [$startDate, $endDate])->groupBy('country')->select('country', DB::raw('count(*) as total'))->orderBy('total', 'DESC')->get();
+            $countriesStatsByMinutes = VisitorStatsSessions::where(['accountid' => $account_id])->whereBetween('starttime', [$startDate, $endDate])->groupBy('country')->select('country', DB::raw('sum(duration) as total'))->orderBy('total', 'DESC')->get();
+        } else {
+            $countriesStatsBySession = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('country')->select('country', DB::raw('count(*) as total'))->orderBy('total', 'DESC')->get();
+            $countriesStatsByMinutes = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('country')->select('country', DB::raw('sum(duration) as total'))->orderBy('total', 'DESC')->get();
+        }
         return response()->json(['countriesStatsByMinutes' => $countriesStatsByMinutes, 'countriesStatsBySession' => $countriesStatsBySession]);
     }
 
@@ -108,7 +150,7 @@ class APIController extends Controller
             'account_id' => 'required'
         ]);
         $subDays = $request->days ? $request->days : 14;
-        $account_id = $request->account_id ? $request->account_id : 163;
+        $account_id = $request->account_id ? $request->account_id : null;
         $subDaysTime = Carbon::today()->subDays($subDays);
 
         $startDate = null;
@@ -166,38 +208,68 @@ class APIController extends Controller
     public function  StatisticsUserAgents(Request $request)
     {
         $request->validate([
-            'days' => 'required',
             'account_id' => 'required'
         ]);
         $subDays = $request->days ? $request->days : 14;
-        $account_id = $request->account_id ? $request->account_id : 163;
+        $account_id = $request->account_id ? $request->account_id : null;
         $subDaysTime = Carbon::today()->subDays($subDays);
 
-        $userAgentsBySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('useragentid')->with('userAgents')->select('useragentid', DB::raw('count(*) as total'),  DB::raw('sum(bandwidth) as bandwidth'))->orderBy('total', 'DESC')->limit(10)->get();
-        $userAgentsByMinutes = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('useragentid')->with('userAgents')->select('useragentid', DB::raw('sum(duration) as seconds'),  DB::raw('sum(bandwidth) as bandwidth'))->orderBy('seconds', 'DESC')->limit(10)->get();
+        $startDate = null;
+        $endDate = null;
+        if (isset($request->from_date) && $request->from_date != null && isset($request->to_date) && $request->to_date != null) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $request->from_date)->startOfDay();
+            $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
+        }
+
+        if ($startDate && $endDate) {
+            $userAgentsBySessions = VisitorStatsSessions::where(['accountid' => $account_id])->whereBetween('starttime', [$startDate, $endDate])->groupBy('useragentid')->with('userAgents')->select('useragentid', DB::raw('count(*) as total'),  DB::raw('sum(bandwidth) as bandwidth'))->orderBy('total', 'DESC')->limit(10)->get();
+            $userAgentsByMinutes = VisitorStatsSessions::where(['accountid' => $account_id])->whereBetween('starttime', [$startDate, $endDate])->groupBy('useragentid')->with('userAgents')->select('useragentid', DB::raw('sum(duration) as seconds'),  DB::raw('sum(bandwidth) as bandwidth'))->orderBy('seconds', 'DESC')->limit(10)->get();
+        } else {
+            $userAgentsBySessions = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('useragentid')->with('userAgents')->select('useragentid', DB::raw('count(*) as total'),  DB::raw('sum(bandwidth) as bandwidth'))->orderBy('total', 'DESC')->limit(10)->get();
+            $userAgentsByMinutes = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy('useragentid')->with('userAgents')->select('useragentid', DB::raw('sum(duration) as seconds'),  DB::raw('sum(bandwidth) as bandwidth'))->orderBy('seconds', 'DESC')->limit(10)->get();
+        }
+
         return response()->json(['userAgentsBySessions' => $userAgentsBySessions, 'userAgentsByMinutes' => $userAgentsByMinutes]);
     }
 
     public function StatisticsHistorical(Request $request)
     {
         $request->validate([
-            'days' => 'required',
             'account_id' => 'required'
         ]);
 
         $subDays = $request->days ? $request->days : 14;
-        $account_id = $request->account_id ? $request->account_id : 163;
+        $account_id = $request->account_id ? $request->account_id : null;
         $subDaysTime = Carbon::today()->subDays($subDays);
 
-        $peakListeners = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy(DB::raw('Date(starttime)'))->select('starttime', DB::raw('count(*) as totalSessions'), DB::raw('sum(duration) as totalDuration'), DB::raw('sum(bandwidth) as totalBandwidth'))->orderBy('starttime', 'ASC')->get()->map(function ($expense) {
-            return [
-                'created_at' => date("d/m", strtotime($expense->starttime)),
-                'totalDuration' => $expense->totalDuration,
-                'totalSessions' => $expense->totalSessions,
-                'totalBandwidth' => $expense->totalBandwidth,
-                'starttime' => $expense->starttime
-            ];
-        })->toArray();
+        $startDate = null;
+        $endDate = null;
+        if (isset($request->from_date) && $request->from_date != null && isset($request->to_date) && $request->to_date != null) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $request->from_date)->startOfDay();
+            $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
+        }
+
+        if ($startDate && $endDate) {
+            $peakListeners = VisitorStatsSessions::where(['accountid' => $account_id])->whereBetween('starttime', [$startDate, $endDate])->groupBy(DB::raw('Date(starttime)'))->select('starttime', DB::raw('count(*) as totalSessions'), DB::raw('sum(duration) as totalDuration'), DB::raw('sum(bandwidth) as totalBandwidth'))->orderBy('starttime', 'ASC')->get()->map(function ($expense) {
+                return [
+                    'created_at' => date("d/m", strtotime($expense->starttime)),
+                    'totalDuration' => $expense->totalDuration,
+                    'totalSessions' => $expense->totalSessions,
+                    'totalBandwidth' => $expense->totalBandwidth,
+                    'starttime' => $expense->starttime
+                ];
+            })->toArray();
+        } else {
+            $peakListeners = VisitorStatsSessions::where(['accountid' => $account_id])->where('starttime', '>=', $subDaysTime)->groupBy(DB::raw('Date(starttime)'))->select('starttime', DB::raw('count(*) as totalSessions'), DB::raw('sum(duration) as totalDuration'), DB::raw('sum(bandwidth) as totalBandwidth'))->orderBy('starttime', 'ASC')->get()->map(function ($expense) {
+                return [
+                    'created_at' => date("d/m", strtotime($expense->starttime)),
+                    'totalDuration' => $expense->totalDuration,
+                    'totalSessions' => $expense->totalSessions,
+                    'totalBandwidth' => $expense->totalBandwidth,
+                    'starttime' => $expense->starttime
+                ];
+            })->toArray();
+        }
 
         $unique = array_unique($peakListeners, SORT_REGULAR);
         return response()->json(['peakListeners' => $peakListeners, 'unique' => $unique, 'subDaysTime' => $subDaysTime]);
