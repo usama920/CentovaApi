@@ -112,13 +112,17 @@ class APIController extends Controller
         $account_id = $request->account_id ? $request->account_id : 163;
         $subDaysTime = Carbon::today()->subDays($subDays);
 
-        $playbackStats = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->get();
+        $playbackStats = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->get();
         $total_tracks = count($playbackStats);
         $total_duration = 0;
         $average_length = 0;
+        $peak_listeners = 0;
+        $peak_track = null;
         if ($total_tracks > 0) {
             $total_duration = $playbackStats->sum('duration');
             $average_length = round($total_duration / $total_tracks);
+            $peak_listeners = $playbackStats[0]->listeners;
+            $peak_track = $playbackStats[0]->name;
         }
 
         $user_Tracks = Track::where(['accountid' => $account_id])->get();
@@ -134,7 +138,7 @@ class APIController extends Controller
         //         $tracks += count($playlist['playlist_tracks']);
         //     }
         // }
-        return response()->json(['topTracksByAirTime' => $topTracksByAirTime, 'topTracksByPlayback' => $topTracksByPlayback, 'total_tracks' => $total_tracks, 'unique_tracks' => $unique_tracks, 'average_length' => $average_length, 'topTracksByAirTime' => $topTracksByAirTime]);
+        return response()->json(['topTracksByAirTime' => $topTracksByAirTime, 'topTracksByPlayback' => $topTracksByPlayback, 'total_tracks' => $total_tracks, 'unique_tracks' => $unique_tracks, 'average_length' => $average_length, 'topTracksByAirTime' => $topTracksByAirTime, 'peak_listeners' => $peak_listeners, 'peak_track' => $peak_track]);
     }
 
     public function  StatisticsUserAgents(Request $request)
