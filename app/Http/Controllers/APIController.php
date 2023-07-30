@@ -240,13 +240,14 @@ class APIController extends Controller
 
         $subDays = $request->days ? $request->days : 14;
         $account_id = $request->account_id ? $request->account_id : null;
-        $subDaysTime = Carbon::today()->subDays($subDays);
+        $period_from = $subDaysTime = Carbon::today()->subDays($subDays);
+        $period_to = Carbon::today();
 
         $startDate = null;
         $endDate = null;
         if (isset($request->from_date) && $request->from_date != null && isset($request->to_date) && $request->to_date != null) {
-            $startDate = Carbon::createFromFormat('Y-m-d', $request->from_date)->startOfDay();
-            $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
+            $period_from = $startDate = Carbon::createFromFormat('Y-m-d', $request->from_date)->startOfDay();
+            $period_to = $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
         }
 
         if ($startDate && $endDate) {
@@ -272,6 +273,6 @@ class APIController extends Controller
         }
 
         $unique = array_unique($peakListeners, SORT_REGULAR);
-        return response()->json(['peakListeners' => $peakListeners, 'unique' => $unique, 'subDaysTime' => $subDaysTime]);
+        return response()->json(['peakListeners' => $peakListeners, 'unique' => $unique, 'subDaysTime' => $subDaysTime, 'period_from' => $period_from, 'period_to' => $period_to]);
     }
 }
