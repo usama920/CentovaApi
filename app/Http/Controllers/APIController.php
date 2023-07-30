@@ -167,6 +167,6 @@ class APIController extends Controller
         //     ];
         // })->toArray();
         $unique = array_unique($peakListeners, SORT_REGULAR);
-        return response()->json(['peakListeners' => $peakListeners, 'unique' => $unique, 'averageListenersPerHour' => $averageListenersPerHour]);
+        return response()->json(['peakListeners' => $peakListeners, 'unique' => $unique, 'averageListenersPerHour' => $averageListenersPerHour, 'subDaysTime' => $subDaysTime]);
     }
 }
