@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\APIController;
+use App\Http\Controllers\DjautoController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\StatisticsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,9 +22,11 @@ Route::get('/', function () {
 
 Route::post('/trylogin', [LoginController::class, 'TryLogin']);
 
-Route::get('/reports', [APIController::class, 'Report']);
-Route::post('/statistics/listeners', [APIController::class, 'StatisticsListeners']);
-Route::post('/statistics/countries', [APIController::class, 'StatisticsCountries']);
-Route::post('/statistics/tracks', [APIController::class, 'StatisticsTracks']);
-Route::post('/statistics/userAgents', [APIController::class, 'StatisticsUserAgents']);
-Route::post('/statistics/historical', [APIController::class, 'StatisticsHistorical']);
+Route::get('/reports', [StatisticsController::class, 'Report']);
+Route::post('/statistics/listeners', [StatisticsController::class, 'StatisticsListeners']);
+Route::post('/statistics/countries', [StatisticsController::class, 'StatisticsCountries']);
+Route::post('/statistics/tracks', [StatisticsController::class, 'StatisticsTracks']);
+Route::post('/statistics/userAgents', [StatisticsController::class, 'StatisticsUserAgents']);
+Route::post('/statistics/historical', [StatisticsController::class, 'StatisticsHistorical']);
+
+Route::post('/djauto/playlists', [DjautoController::class, 'Playlists']);

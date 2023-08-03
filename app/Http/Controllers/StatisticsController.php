@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
-class APIController extends Controller
+class StatisticsController extends Controller
 {
     public function Report()
     {
@@ -190,18 +190,6 @@ class APIController extends Controller
             $topTracksByPlayback = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->groupBy('name')->select('name', DB::raw('count(*) as playbacks'))->orderBy('playbacks', 'DESC')->limit(10)->get();
             $topTracksByAirTime = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->groupBy('name')->select('name', DB::raw('sum(duration) as totalDuration'))->orderBy('totalDuration', 'DESC')->limit(10)->get();
         }
-
-
-        // $test = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id, 'name' => 'Rock Solid Radio - Promo VA RSR 4'])->get();
-        // $stats['totalDuration'] = $test->sum('duration');
-        // $stats['count'] = count($test);
-        // $playlists = Playlists::where(['accountid' => $account_id])->with('playlistTracks')->get()->toArray();
-        // $tracks = 0;
-        // foreach ($playlists as $playlist) {
-        //     if (isset($playlist['playlist_tracks']) && $playlist['playlist_tracks'] != null) {
-        //         $tracks += count($playlist['playlist_tracks']);
-        //     }
-        // }
         return response()->json(['topTracksByAirTime' => $topTracksByAirTime, 'topTracksByPlayback' => $topTracksByPlayback, 'total_tracks' => $total_tracks, 'unique_tracks' => $unique_tracks, 'average_length' => $average_length, 'topTracksByAirTime' => $topTracksByAirTime, 'peak_listeners' => $peak_listeners, 'peak_track' => $peak_track, 'peak_time' => $peak_time]);
     }
 
@@ -247,7 +235,6 @@ class APIController extends Controller
         $endDate = null;
         if (isset($request->from_date) && $request->from_date != null && isset($request->to_date) && $request->to_date != null) {
             $period_from = $startDate = Carbon::createFromFormat('Y-m-d', $request->from_date)->startOfDay();
-            $period_to = $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
             $period_to = $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
         }
 
