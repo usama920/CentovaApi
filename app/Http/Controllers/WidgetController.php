@@ -11,7 +11,7 @@ class WidgetController extends Controller
     {
         $request->validate([
             'account_id' => 'required',
-            'recent_tracks' => 'requried'
+            'recent_tracks' => 'required'
         ]);
         Account::where(['id' => $request->account_id])->update([
             'recenttracks' => $request->recent_tracks
