@@ -3,6 +3,7 @@
 use App\Http\Controllers\DjautoController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\StatisticsController;
+use App\Http\Controllers\WidgetController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -30,3 +31,6 @@ Route::post('/statistics/userAgents', [StatisticsController::class, 'StatisticsU
 Route::post('/statistics/historical', [StatisticsController::class, 'StatisticsHistorical']);
 
 Route::post('/djauto/playlists', [DjautoController::class, 'Playlists']);
+
+
+Route::post('/widgets/update/recent_tracks', [WidgetController::class, 'UpdateRecentTracks']);
