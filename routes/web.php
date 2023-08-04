@@ -34,3 +34,4 @@ Route::post('/djauto/playlists', [DjautoController::class, 'Playlists']);
 
 
 Route::post('/widgets/update/recent_tracks', [WidgetController::class, 'UpdateRecentTracks']);
+Route::post('/widgets/update/song_requests', [WidgetController::class, 'UpdateSongRequests']);
