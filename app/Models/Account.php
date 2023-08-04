@@ -9,7 +9,7 @@ class Account extends Model
 {
     use HasFactory;
     protected $table = 'accounts';
-    protected $timestamps = false;
+    public $timestamps = false;
 
     protected $fillable = [
         'id',
