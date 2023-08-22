@@ -118,6 +118,28 @@ class StatisticsController extends Controller
         }
     }
 
+    public function StatisticsLiveListeners(Request $request)
+    {
+        $request->validate([
+            'account_id' => 'required'
+        ]);
+        $account_id = $request->account_id ? $request->account_id : null;
+
+
+        $tunedListeners = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('ipaddress')->select('resumedata', 'ipaddress', 'country', DB::raw('sum(duration) as totalDuration'))->with('userAgents')->orderBy('starttime', 'DESC')->get();
+
+        // $listenerData = VisitorStatsSessions::where('ipaddress', '1608050013')->groupBy('ipaddress')->select(DB::raw('sum(duration) as totalDuration'))->get();
+        // foreach ($tunedListeners as $key => $listener) {
+
+        // $tunedListeners[$key]->Dration = $listenerData->totalDuration;
+        // }
+
+        return response()->json([
+            // 'listenerData' => $listenerData,
+            'tunedListeners' => $tunedListeners
+        ]);
+    }
+
     public function StatisticsCountries(Request $request)
     {
         $request->validate([

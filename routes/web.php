@@ -25,6 +25,7 @@ Route::post('/trylogin', [LoginController::class, 'TryLogin']);
 
 Route::get('/reports', [StatisticsController::class, 'Report']);
 Route::post('/statistics/listeners', [StatisticsController::class, 'StatisticsListeners']);
+Route::post('/statistics/liveListeners', [StatisticsController::class, 'StatisticsLiveListeners']);
 Route::post('/statistics/countries', [StatisticsController::class, 'StatisticsCountries']);
 Route::post('/statistics/tracks', [StatisticsController::class, 'StatisticsTracks']);
 Route::post('/statistics/userAgents', [StatisticsController::class, 'StatisticsUserAgents']);
