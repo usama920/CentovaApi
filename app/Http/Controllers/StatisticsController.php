@@ -128,6 +128,10 @@ class StatisticsController extends Controller
 
         $tunedListeners = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('ipaddress')->select('resumedata', 'useragentid', 'ipaddress', 'country', DB::raw('sum(duration) as totalDuration'))->with('userAgents')->orderBy('starttime', 'DESC')->get();
 
+        foreach ($tunedListeners as $key => $listener) {
+            $tunedListeners[$key]['ip'] = long2ip($listener->ipaddress);
+        }
+
         // $listenerData = VisitorStatsSessions::where('ipaddress', '1608050013')->groupBy('ipaddress')->select(DB::raw('sum(duration) as totalDuration'))->get();
         // foreach ($tunedListeners as $key => $listener) {
 
