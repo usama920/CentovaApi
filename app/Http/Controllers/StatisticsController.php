@@ -132,14 +132,14 @@ class StatisticsController extends Controller
             $tunedListeners[$key]['ip'] = long2ip($listener->ipaddress);
         }
 
-        // $listenerData = VisitorStatsSessions::where('ipaddress', '1608050013')->groupBy('ipaddress')->select(DB::raw('sum(duration) as totalDuration'))->get();
-        // foreach ($tunedListeners as $key => $listener) {
+        $listenersCountryWise = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('country')->select(DB::raw('count(*) as countryCount'), 'country')->orderBy('countryCount', 'DESC')->get();
 
-        // $tunedListeners[$key]->Dration = $listenerData->totalDuration;
-        // }
+        $listenersUserAgentWise = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('useragentid')->select('useragentid', DB::raw('count(*) as userAgentsCount'))->with('userAgents')->orderBy('userAgentsCount', 'DESC')->get();
+
 
         return response()->json([
-            // 'listenerData' => $listenerData,
+            'listenersUserAgentWise' => $listenersUserAgentWise,
+            'listenersCountryWise' => $listenersCountryWise,
             'tunedListeners' => $tunedListeners
         ]);
     }
