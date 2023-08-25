@@ -126,7 +126,7 @@ class StatisticsController extends Controller
         $account_id = $request->account_id ? $request->account_id : null;
 
 
-        $tunedListeners = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('ipaddress')->select('resumedata', 'useragentid', 'ipaddress', 'country', DB::raw('sum(duration) as totalDuration'))->with('userAgents')->orderBy('starttime', 'DESC')->get();
+        $tunedListeners = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('ipaddress')->select('starttime', 'resumedata', 'useragentid', 'ipaddress', 'country', DB::raw('sum(duration) as totalDuration'))->with('userAgents')->orderBy('totalDuration', 'DESC')->get();
 
         foreach ($tunedListeners as $key => $listener) {
             $tunedListeners[$key]['ip'] = long2ip($listener->ipaddress);
@@ -134,7 +134,7 @@ class StatisticsController extends Controller
 
         $listenersCountryWise = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('country')->select(DB::raw('count(*) as countryCount'), 'country')->orderBy('countryCount', 'DESC')->get();
 
-        $listenersUserAgentWise = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('useragentid')->select('useragentid', DB::raw('count(*) as userAgentsCount'))->with('userAgents')->orderBy('userAgentsCount', 'DESC')->get();
+        $listenersUserAgentWise = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('useragentid')->select('useragentid', DB::raw('count(*) as userAgentsCount'), 'ipaddress')->with('userAgents')->orderBy('userAgentsCount', 'DESC')->get();
 
 
         return response()->json([
