@@ -121,16 +121,42 @@ class StatisticsController extends Controller
     public function StatisticsLiveListeners(Request $request)
     {
         $request->validate([
-            'account_id' => 'required'
+            'account_id' => 'required',
+            'username' => 'required',
+            'password' => 'required'
         ]);
         $account_id = $request->account_id ? $request->account_id : null;
 
+        $url  = "http://admin:$request->password@51.81.208.185:8800/admin.cgi?sid=1&mode=viewxml&page=3";
 
-        $tunedListeners = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('ipaddress')->select('starttime', 'resumedata', 'useragentid', 'ipaddress', 'country', DB::raw('sum(duration) as totalDuration'))->with('userAgents')->orderBy('totalDuration', 'DESC')->get();
+        $obj  = json_decode(json_encode(simplexml_load_file($url)));
+        // return response()->json([$obj->LISTENERS]);
+        // print_r($obj);
+        // die;
+        $tunedListeners = [];
+        foreach ($obj->LISTENERS->LISTENER as $listener) {
+            // $ip = ip2long($listener->HOSTNAME);
+            $location = json_decode(file_get_contents("http://ipinfo.io/{$listener->HOSTNAME}/json"));
+            // prx($location->country);
+            // $session = VisitorStatsSessions::where(['ipaddress' => $ip])->first();
+            // prx($session);
+            if ($location) {
 
-        foreach ($tunedListeners as $key => $listener) {
-            $tunedListeners[$key]['ip'] = long2ip($listener->ipaddress);
+                $newArray = [
+                    'ip' => $listener->HOSTNAME,
+                    'userAgent' => $listener->USERAGENT,
+                    'totalDuration' => $listener->CONNECTTIME,
+                    'country' => $location->country
+                ];
+                array_push($tunedListeners, $newArray);
+            }
         }
+
+        // $tunedListeners = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('ipaddress')->select('starttime', 'resumedata', 'useragentid', 'ipaddress', 'country', DB::raw('sum(duration) as totalDuration'))->with('userAgents')->orderBy('totalDuration', 'DESC')->get();
+
+        // foreach ($tunedListeners as $key => $listener) {
+        //     $tunedListeners[$key]['ip'] = long2ip($listener->ipaddress);
+        // }
 
         $listenersCountryWise = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('country')->select(DB::raw('count(*) as countryCount'), 'country')->orderBy('countryCount', 'DESC')->get();
 

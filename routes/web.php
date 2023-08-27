@@ -18,7 +18,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    $user = 'admin';
+    $pass = 'RSRnet2018';
+    $url  = "http://$user:$pass@51.81.208.185:8800/admin.cgi?sid=1&mode=viewxml&page=3";
+
+    $obj  = json_decode(json_encode(simplexml_load_file($url)));
+    print_r($obj);
+    // return view('welcome');
 });
 
 Route::post('/trylogin', [LoginController::class, 'TryLogin']);
