@@ -118,6 +118,11 @@ class StatisticsController extends Controller
         }
     }
 
+    public function comparator($object1, $object2)
+    {
+        return $object1->count > $object2->count;
+    }
+
     public function StatisticsLiveListeners(Request $request)
     {
         $request->validate([
@@ -134,6 +139,11 @@ class StatisticsController extends Controller
         // print_r($obj);
         // die;
         $tunedListeners = [];
+        $listenersCountryWise = [];
+        $listenersUserAgentWise = [];
+
+
+
         foreach ($obj->LISTENERS->LISTENER as $listener) {
             // $ip = ip2long($listener->HOSTNAME);
             $location = json_decode(file_get_contents("http://ipinfo.io/{$listener->HOSTNAME}/json"));
@@ -141,7 +151,6 @@ class StatisticsController extends Controller
             // $session = VisitorStatsSessions::where(['ipaddress' => $ip])->first();
             // prx($session);
             if ($location) {
-
                 $newArray = [
                     'ip' => $listener->HOSTNAME,
                     'userAgent' => $listener->USERAGENT,
@@ -149,8 +158,46 @@ class StatisticsController extends Controller
                     'country' => $location->country
                 ];
                 array_push($tunedListeners, $newArray);
+
+                $included = false;
+                foreach ($listenersCountryWise as $key => $country) {
+                    if ($country['location'] == $location->country && $included == false) {
+                        $listenersCountryWise[$key]['count'] = $country['count'] + 1;
+                        $included = true;
+                    }
+                }
+                if ($included == false) {
+                    $newArray = [
+                        'location' => $location->country,
+                        'count' => 1
+                    ];
+                    array_push($listenersCountryWise, $newArray);
+                }
+
+                $included = false;
+                $agent = explode(" ", $listener->USERAGENT);
+                foreach ($listenersUserAgentWise as $key => $userAgent) {
+                    if ($userAgent['userAgent'] == $agent[0] && $included == false) {
+                        $listenersUserAgentWise[$key]['count'] = $userAgent['count'] + 1;
+                        $included = true;
+                    }
+                }
+                if ($included == false) {
+                    $newArray = [
+                        'userAgent' => $agent[0],
+                        'count' => 1
+                    ];
+                    array_push($listenersUserAgentWise, $newArray);
+                }
             }
         }
+
+        usort($listenersCountryWise, function ($object1, $object2) {
+            return $object1['count'] < $object2['count'];
+        });
+        usort($listenersUserAgentWise, function ($object1, $object2) {
+            return $object1['count'] < $object2['count'];
+        });
 
         // $tunedListeners = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('ipaddress')->select('starttime', 'resumedata', 'useragentid', 'ipaddress', 'country', DB::raw('sum(duration) as totalDuration'))->with('userAgents')->orderBy('totalDuration', 'DESC')->get();
 
@@ -158,9 +205,9 @@ class StatisticsController extends Controller
         //     $tunedListeners[$key]['ip'] = long2ip($listener->ipaddress);
         // }
 
-        $listenersCountryWise = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('country')->select(DB::raw('count(*) as countryCount'), 'country')->orderBy('countryCount', 'DESC')->get();
+        // $listenersCountryWise = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('country')->select(DB::raw('count(*) as countryCount'), 'country')->orderBy('countryCount', 'DESC')->get();
 
-        $listenersUserAgentWise = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('useragentid')->select('useragentid', DB::raw('count(*) as userAgentsCount'), 'ipaddress')->with('userAgents')->orderBy('userAgentsCount', 'DESC')->get();
+        // $listenersUserAgentWise = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('useragentid')->select('useragentid', DB::raw('count(*) as userAgentsCount'), 'ipaddress')->with('userAgents')->orderBy('userAgentsCount', 'DESC')->get();
 
 
         return response()->json([
