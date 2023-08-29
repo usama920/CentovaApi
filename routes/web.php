@@ -27,7 +27,7 @@ Route::post('/statistics/tracks', function (Request $request) {
     $request->validate([
         'account_id' => 'required'
     ]);
-    $subDays = $request->days ? $request->days : 1;
+    $subDays = $request->days ? $request->days : 14;
     $account_id = $request->account_id ? $request->account_id : null;
     $subDaysTime = Carbon::today()->subDays($subDays);
 
@@ -38,12 +38,17 @@ Route::post('/statistics/tracks', function (Request $request) {
         $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
     }
 
-    $playbackStats = null;
+    $playbackStats = [];
 
     if ($startDate && $endDate) {
-        $playbackStats = DB::table('playbackstats_tracks')->whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
+        $stats_results = DB::table('playbackstats_tracks')->whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
     } else {
-        $playbackStats = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
+        $stats_results = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->chunk(100, function ($stats) {
+            foreach ($stats as $stat) {
+                $new_array = ["name" => $stat->name];
+                array_push($playbackStats, $new_array);
+            }
+        });
         return response()->json(['playbackStats' => $playbackStats]);
     }
 
