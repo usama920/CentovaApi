@@ -41,10 +41,10 @@ Route::post('/statistics/tracks', function (Request $request) {
     if ($startDate && $endDate) {
         $playbackStats = DB::table('playbackstats_tracks')->whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
     } else {
+        return response()->json(['playbackStats' => $playbackStats]);
         $playbackStats = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
     }
 
-    return response()->json(['playbackStats' => $playbackStats]);
 
     $total_tracks = count($playbackStats);
     $total_duration = 0;
