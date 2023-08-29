@@ -28,7 +28,6 @@ Route::post('/statistics/tracks', function (Request $request) {
     $subDays = $request->days ? $request->days : 14;
     $account_id = $request->account_id ? $request->account_id : null;
     $subDaysTime = Carbon::today()->subDays($subDays);
-    return response()->json($subDaysTime);
 
     $startDate = null;
     $endDate = null;
@@ -36,6 +35,9 @@ Route::post('/statistics/tracks', function (Request $request) {
         $startDate = Carbon::createFromFormat('Y-m-d', $request->from_date)->startOfDay();
         $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
     }
+
+    return response()->json($subDaysTime);
+
 
     if ($startDate && $endDate) {
         $playbackStats = DB::table('playbackstats_tracks')->whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
