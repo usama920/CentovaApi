@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('/statistics/tracks', function (Request $request) {
+    set_time_limit(60000);
+
     $request->validate([
         'account_id' => 'required'
     ]);
