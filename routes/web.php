@@ -38,14 +38,14 @@ Route::post('/statistics/tracks', function (Request $request) {
         $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
     }
 
-    $playbackStats = array();
+    $playbackStats = [];
 
     if ($startDate && $endDate) {
         $stats_results = DB::table('playbackstats_tracks')->whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
     } else {
         $stats_results = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->chunk(100, function ($stats) {
             foreach ($stats as $stat) {
-                $new_array = ["name" => $stat->name];
+                $new_array = ["name" => "test"];
                 array_push($playbackStats, $new_array);
             }
         });
