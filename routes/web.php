@@ -22,9 +22,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('/statistics/tracks', function (Request $request) {
-    // $request->validate([
-    //     'account_id' => 'required'
-    // ]);
+    $request->validate([
+        'account_id' => 'required'
+    ]);
     $subDays = $request->days ? $request->days : 14;
     $account_id = $request->account_id ? $request->account_id : null;
     $subDaysTime = Carbon::today()->subDays($subDays);
