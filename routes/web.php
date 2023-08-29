@@ -25,7 +25,7 @@ Route::post('/statistics/tracks', function (Request $request) {
     $request->validate([
         'account_id' => 'required'
     ]);
-    $subDays = $request->days ? $request->days : 14;
+    $subDays = $request->days ? $request->days : 1;
     $account_id = $request->account_id ? $request->account_id : null;
     $subDaysTime = Carbon::today()->subDays($subDays);
 
