@@ -22,12 +22,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('/statistics/tracks', function (Request $request) {
-    $request->validate([
-        'account_id' => 'required'
-    ]);
+    // $request->validate([
+    //     'account_id' => 'required'
+    // ]);
     $subDays = $request->days ? $request->days : 14;
     $account_id = $request->account_id ? $request->account_id : null;
     $subDaysTime = Carbon::today()->subDays($subDays);
+    return response()->json($subDaysTime);
 
     $startDate = null;
     $endDate = null;
@@ -42,7 +43,6 @@ Route::post('/statistics/tracks', function (Request $request) {
         $playbackStats = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
     }
 
-    return response()->json($playbackStats);
     $total_tracks = count($playbackStats);
     $total_duration = 0;
     $average_length = 0;
