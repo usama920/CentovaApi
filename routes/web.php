@@ -17,6 +17,15 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::post('/statistics/tracks', function () {
+    $user = 'admin';
+    $pass = 'RSRnet2018';
+    $url  = "http://$user:$pass@51.81.208.185:8800/admin.cgi?sid=1&mode=viewxml&page=3";
+
+    $obj  = json_decode(json_encode(simplexml_load_file($url)));
+    print_r($obj);
+    // return view('welcome');
+});
 
 Route::post('/trylogin', [LoginController::class, 'TryLogin']);
 
@@ -24,7 +33,7 @@ Route::get('/reports', [StatisticsController::class, 'Report']);
 Route::post('/statistics/listeners', [StatisticsController::class, 'StatisticsListeners']);
 Route::post('/statistics/liveListeners', [StatisticsController::class, 'StatisticsLiveListeners']);
 Route::post('/statistics/countries', [StatisticsController::class, 'StatisticsCountries']);
-Route::post('/statistics/tracks', [StatisticsController::class, 'StatisticsTracks']);
+// Route::post('/statistics/tracks', [StatisticsController::class, 'StatisticsTracks']);
 Route::post('/statistics/userAgents', [StatisticsController::class, 'StatisticsUserAgents']);
 Route::post('/statistics/historical', [StatisticsController::class, 'StatisticsHistorical']);
 
