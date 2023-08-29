@@ -34,6 +34,7 @@ Route::post('/statistics/listeners', [StatisticsController::class, 'StatisticsLi
 Route::post('/statistics/liveListeners', [StatisticsController::class, 'StatisticsLiveListeners']);
 Route::post('/statistics/countries', [StatisticsController::class, 'StatisticsCountries']);
 Route::post('/statistics/tracks', [StatisticsController::class, 'StatisticsTracks']);
+Route::post('/statistics/track', [StatisticsController::class, 'StatisticsTrack']);
 Route::post('/statistics/userAgents', [StatisticsController::class, 'StatisticsUserAgents']);
 Route::post('/statistics/historical', [StatisticsController::class, 'StatisticsHistorical']);
 

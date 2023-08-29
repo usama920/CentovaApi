@@ -135,9 +135,6 @@ class StatisticsController extends Controller
         $url  = "http://admin:$request->password@51.81.208.185:8800/admin.cgi?sid=1&mode=viewxml&page=3";
 
         $obj  = json_decode(json_encode(simplexml_load_file($url)));
-        // return response()->json([$obj->LISTENERS]);
-        // print_r($obj);
-        // die;
         $tunedListeners = [];
         $listenersCountryWise = [];
         $listenersUserAgentWise = [];
@@ -145,11 +142,8 @@ class StatisticsController extends Controller
 
 
         foreach ($obj->LISTENERS->LISTENER as $listener) {
-            // $ip = ip2long($listener->HOSTNAME);
             $location = json_decode(file_get_contents("http://ipinfo.io/{$listener->HOSTNAME}/json"));
-            // prx($location->country);
-            // $session = VisitorStatsSessions::where(['ipaddress' => $ip])->first();
-            // prx($session);
+
             if ($location) {
                 $newArray = [
                     'ip' => $listener->HOSTNAME,
@@ -199,16 +193,6 @@ class StatisticsController extends Controller
             return $object1['count'] < $object2['count'];
         });
 
-        // $tunedListeners = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('ipaddress')->select('starttime', 'resumedata', 'useragentid', 'ipaddress', 'country', DB::raw('sum(duration) as totalDuration'))->with('userAgents')->orderBy('totalDuration', 'DESC')->get();
-
-        // foreach ($tunedListeners as $key => $listener) {
-        //     $tunedListeners[$key]['ip'] = long2ip($listener->ipaddress);
-        // }
-
-        // $listenersCountryWise = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('country')->select(DB::raw('count(*) as countryCount'), 'country')->orderBy('countryCount', 'DESC')->get();
-
-        // $listenersUserAgentWise = VisitorStatsSessions::where(['accountid' => $account_id])->whereDate('endtime', '1000-01-01 00:00:00')->groupBy('useragentid')->select('useragentid', DB::raw('count(*) as userAgentsCount'), 'ipaddress')->with('userAgents')->orderBy('userAgentsCount', 'DESC')->get();
-
 
         return response()->json([
             'listenersUserAgentWise' => $listenersUserAgentWise,
@@ -244,6 +228,55 @@ class StatisticsController extends Controller
     }
 
     public function StatisticsTracks(Request $request)
+    {
+        $request->validate([
+            'account_id' => 'required'
+        ]);
+        $subDays = $request->days ? $request->days : 14;
+        $account_id = $request->account_id ? $request->account_id : null;
+        $subDaysTime = Carbon::today()->subDays($subDays);
+
+        $startDate = null;
+        $endDate = null;
+        if (isset($request->from_date) && $request->from_date != null && isset($request->to_date) && $request->to_date != null) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $request->from_date)->startOfDay();
+            $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
+        }
+
+        if ($startDate && $endDate) {
+            $playbackStats = DB::table('playbackstats_tracks')->whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
+        } else {
+            $playbackStats = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
+        }
+
+        $total_tracks = count($playbackStats);
+        $total_duration = 0;
+        $average_length = 0;
+        $peak_listeners = 0;
+        $peak_track = null;
+        $peak_time = null;
+        if ($total_tracks > 0) {
+            $total_duration = $playbackStats->sum('duration');
+            $average_length = round($total_duration / $total_tracks);
+            $peak_listeners = $playbackStats[0]->listeners;
+            $peak_track = $playbackStats[0]->name;
+            $peak_time = $playbackStats[0]->starttime;
+        }
+
+        $user_Tracks = Track::where(['accountid' => $account_id])->get();
+        $unique_tracks = count($user_Tracks);
+
+        if ($startDate && $endDate) {
+            $topTracksByPlayback = DB::table('playbackstats_tracks')->whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->groupBy('name')->select('name', DB::raw('count(*) as playbacks'))->orderBy('playbacks', 'DESC')->limit(10)->get();
+            $topTracksByAirTime = DB::table('playbackstats_tracks')->whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->groupBy('name')->select('name', DB::raw('sum(duration) as totalDuration'))->orderBy('totalDuration', 'DESC')->limit(10)->get();
+        } else {
+            $topTracksByPlayback = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->groupBy('name')->select('name', DB::raw('count(*) as playbacks'))->orderBy('playbacks', 'DESC')->limit(10)->get();
+            $topTracksByAirTime = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->groupBy('name')->select('name', DB::raw('sum(duration) as totalDuration'))->orderBy('totalDuration', 'DESC')->limit(10)->get();
+        }
+        return response()->json(['topTracksByAirTime' => $topTracksByAirTime, 'topTracksByPlayback' => $topTracksByPlayback, 'total_tracks' => $total_tracks, 'unique_tracks' => $unique_tracks, 'average_length' => $average_length, 'topTracksByAirTime' => $topTracksByAirTime, 'peak_listeners' => $peak_listeners, 'peak_track' => $peak_track, 'peak_time' => $peak_time]);
+    }
+
+    public function StatisticsTrack(Request $request)
     {
         $request->validate([
             'account_id' => 'required'
