@@ -45,8 +45,6 @@ Route::post('/statistics/tracks', function (Request $request) {
     } else {
         $stats_results = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->chunk(100, function ($stats) {
             foreach ($stats as $stat) {
-                $new_array = ["name" => "test"];
-                array_push($playbackStats, $new_array);
             }
         });
         return response()->json(['playbackStats' => $playbackStats]);
