@@ -42,6 +42,7 @@ Route::post('/statistics/tracks', function (Request $request) {
         $playbackStats = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
     }
 
+    return response()->json($playbackStats);
     $total_tracks = count($playbackStats);
     $total_duration = 0;
     $average_length = 0;
