@@ -38,32 +38,35 @@ Route::post('/statistics/tracks', function (Request $request) {
         $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
     }
 
-    $playbackStats = [];
+    $playbackStats = array();
+    $total_duration = 0;
 
     if ($startDate && $endDate) {
         $stats_results = DB::table('playbackstats_tracks')->whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
     } else {
-        $stats_results = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->chunk(100, function ($stats) {
-            $playbackStats = [];
+        $stats_results = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->chunk(100, function ($stats) use (&$playbackStats, &$total_duration) {
+            // $playbackStats = [];
             foreach ($stats as $stat) {
-                echo $stat;
-                $newArray = ["name" => "test"];
-                array_push($playbackStats, $newArray);
+                $total_duration += $stat->duration;
+                $playbackStats[] = $stat;
+                // print_r($stat->name);
+                // $newArray = ["name" => "test"];
+
+                // array_push($playbackStats, $newArray);
             }
-            return $playbackStats;
+            // return $playbackStats;
         });
-        return response()->json(['playbackStats' => $playbackStats]);
+        // return response()->json(['playbackStats' => $playbackStats]);
     }
 
 
     $total_tracks = count($playbackStats);
-    $total_duration = 0;
     $average_length = 0;
     $peak_listeners = 0;
     $peak_track = null;
     $peak_time = null;
     if ($total_tracks > 0) {
-        $total_duration = $stats_results->sum('duration');
+        // $total_duration = $stats_results->sum('duration');
         // $total_duration = $playbackStats->sum('duration');
         $average_length = round($total_duration / $total_tracks);
         $peak_listeners = $playbackStats[0]->listeners;
