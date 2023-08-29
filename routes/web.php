@@ -43,8 +43,10 @@ Route::post('/statistics/tracks', function (Request $request) {
     if ($startDate && $endDate) {
         $stats_results = DB::table('playbackstats_tracks')->whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
     } else {
-        $stats_results = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->chunk(100, function ($stats) {
+        $stats_results = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->chunk(100, function ($stats) use ($playbackStats) {
             foreach ($stats as $stat) {
+                $newArray = ["name" => "test"];
+                array_push($playbackStats, $newArray);
             }
         });
         return response()->json(['playbackStats' => $playbackStats]);
