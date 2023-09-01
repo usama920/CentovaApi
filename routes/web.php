@@ -39,26 +39,20 @@ Route::post('/statistics/tracks', function (Request $request) {
     }
 
     $playbackStats = array();
-    $total_duration = 0;
 
     if ($startDate && $endDate) {
-        DB::table('playbackstats_tracks')->whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
+        DB::table('playbackstats_tracks')->whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->groupBy('accountid')->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->select('name', 'starttime', 'listeners', DB::raw('count(*) as total_tracks'), DB::raw('sum(duration) as total_duration'))->get();
     } else {
-        // DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->chunk(1000, function ($stats) use (&$playbackStats, &$total_duration) {
-        //     // $playbackStats = [];
-        //     foreach ($stats as $stat) {
-        //         $total_duration += $stat->duration;
-        //         $playbackStats[] = $stat;
-        //     }
-        // });
-
         $playbackStats = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->groupBy('accountid')->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->select('name', 'starttime', 'listeners', DB::raw('count(*) as total_tracks'), DB::raw('sum(duration) as total_duration'))->get();
     }
 
-    // return response()->json(['test' => $test]);
 
 
-    $total_tracks = $playbackStats[0]->total_tracks;
+    if (isset($playbackStats[0]->total_tracks)) {
+        $total_tracks = $playbackStats[0]->total_tracks;
+    } else {
+        $total_tracks = 0;
+    }
     $average_length = 0;
     $peak_listeners = 0;
     $peak_track = null;
