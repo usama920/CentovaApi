@@ -36,7 +36,7 @@ class DjautoController extends Controller
         ]);
         Account::where(['id' => $request->account_id])->update([
             'genre' => $request->genre,
-            'crossfade' => $request->crossfdae,
+            'crossfade' => $request->crossfade,
             'ignoremeta' => $request->ignoremeta
         ]);
         return response()->json(['status' => 'success']);
