@@ -34,7 +34,7 @@ class DjautoController extends Controller
             'crossfade' => 'required',
             'ignoremeta' => 'required'
         ]);
-        Account::where(['accountid' => $request->account_id])->update([
+        Account::where(['id' => $request->account_id])->update([
             'genre' => $request->genre,
             'crossfade' => $request->crossfdae,
             'ignoremeta' => $request->ignoremeta
