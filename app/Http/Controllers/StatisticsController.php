@@ -243,21 +243,25 @@ class StatisticsController extends Controller
             $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
         }
 
+        $playbackStats = array();
+
         if ($startDate && $endDate) {
-            $playbackStats = DB::table('playbackstats_tracks')->whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
+            DB::table('playbackstats_tracks')->whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->groupBy('accountid')->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->select('name', 'starttime', 'listeners', DB::raw('count(*) as total_tracks'), DB::raw('sum(duration) as total_duration'))->get();
         } else {
-            $playbackStats = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->get();
+            $playbackStats = DB::table('playbackstats_tracks')->where('starttime', '>=', $subDaysTime)->where(['accountid' => $account_id])->groupBy('accountid')->orderBy('listeners', 'DESC')->orderBy('duration', 'DESC')->select('name', 'starttime', 'listeners', DB::raw('count(*) as total_tracks'), DB::raw('sum(duration) as total_duration'))->get();
         }
 
-        $total_tracks = count($playbackStats);
-        $total_duration = 0;
+        if (isset($playbackStats[0]->total_tracks)) {
+            $total_tracks = $playbackStats[0]->total_tracks;
+        } else {
+            $total_tracks = 0;
+        }
         $average_length = 0;
         $peak_listeners = 0;
         $peak_track = null;
         $peak_time = null;
         if ($total_tracks > 0) {
-            $total_duration = $playbackStats->sum('duration');
-            $average_length = round($total_duration / $total_tracks);
+            $average_length = round($playbackStats[0]->total_duration / $total_tracks);
             $peak_listeners = $playbackStats[0]->listeners;
             $peak_track = $playbackStats[0]->name;
             $peak_time = $playbackStats[0]->starttime;

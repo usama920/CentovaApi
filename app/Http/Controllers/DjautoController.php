@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Playlists;
 use App\Models\Track;
 use App\Models\TrackHistory;
@@ -23,5 +24,21 @@ class DjautoController extends Controller
         $playlists = Playlists::where(['accountid' => $request->account_id])->get();
 
         return response()->json(['playlists' => $playlists]);
+    }
+
+    public function UpdateSettings(Request $request)
+    {
+        $request->validate([
+            'account_id' => 'required',
+            'genre' => 'required',
+            'crossfade' => 'required',
+            'ignoremeta' => 'required'
+        ]);
+        Account::where(['accountid' => $request->account_id])->update([
+            'genre' => $request->genre,
+            'crossfade' => $request->crossfdae,
+            'ignoremeta' => $request->ignoremeta
+        ]);
+        return response()->json(['status' => 'success']);
     }
 }
