@@ -65,7 +65,7 @@ class LoginController extends Controller
             'account_id' => 'required',
             'username' => 'required',
             'password' => 'required',
-            'type' => 'requried'
+            'type' => 'required'
         ]);
         if ($request->type == 'appwrite') {
             $request->validate([
