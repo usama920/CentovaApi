@@ -78,10 +78,11 @@ class LoginController extends Controller
         if ($account) {
             $checkPassword = Hash::check($password, $account->password);
             if ($checkPassword) {
-                $account->appwrite_id = $request->appwrite_id;
-                $account->save();
+                DB::table('accounts')->where(['username' => $username])->update([
+                    'appwrite_id' => $request->appwrite_id
+                ]);
                 return response()->json([
-                    'status' => 'success', 'appwrite_id' => $account->appwrite_id, 'hostname' => $account->hostname, 'port' => $account->port
+                    'status' => 'success'
                 ]);
             } else {
                 return response()->json([
