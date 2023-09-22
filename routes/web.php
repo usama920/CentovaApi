@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/trylogin', [LoginController::class, 'TryLogin']);
 
 Route::post('/getAccount', [LoginController::class, 'GetAccount']);
+Route::post('/updateAccount', [LoginController::class, 'UpdateAccount']);
 
 Route::get('/reports', [StatisticsController::class, 'Report']);
 Route::post('/statistics/listeners', [StatisticsController::class, 'StatisticsListeners']);
