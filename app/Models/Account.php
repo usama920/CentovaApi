@@ -13,5 +13,6 @@ class Account extends Model
 
     protected $fillable = [
         'id',
+        'appwrite_id'
     ];
 }
