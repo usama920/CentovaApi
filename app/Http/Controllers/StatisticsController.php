@@ -68,7 +68,7 @@ class StatisticsController extends Controller
             $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('starttime', 'ASC')->offset($skip)->limit(500)->get();
             $skip += 500;
 
-            foreach ($stats as $key => $stat) {
+            foreach ($stats as $stat) {
                 $title = null;
                 $raw_name = explode("-", $stat->name);
 
@@ -89,7 +89,6 @@ class StatisticsController extends Controller
                     if ($track->title == $title && !$found) {
                         $album_data->raw_meta = $stat->name;
                         $album_data->comments = $track->comments;
-                        array_push($playlists, $album_data);
                         $found = true;
                     }
                 }
