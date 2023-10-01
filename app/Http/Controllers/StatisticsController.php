@@ -42,7 +42,7 @@ class StatisticsController extends Controller
             $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
         }
 
-        $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->limit(2000)->get();
+        $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->limit(3000)->get();
 
         // $stats = DB::table('playbackstats_tracks')
         //     ->where(['playbackstats_tracks.accountid' => $request->account_id])
