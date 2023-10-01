@@ -54,17 +54,21 @@ class StatisticsController extends Controller
             array_push($user_tracks, $track);
         }
 
-        // prx($user_tracks);
 
+        $totalCount = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->count();
 
-        // $totalCount = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->count();
-        // prx($user_tracks);
-        $skip = 0;
+        $cycle = $request->cycle ? $request->cycle : 1;
+        if ($cycle > 1) {
+            $skip = 5000 * ($cycle - 1);
+        } else {
+            $skip = 0;
+        }
+
         $playlists = [];
         // $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('starttime', 'ASC')->skip(10)->limit(10)->get();
         // prx($stats);
 
-        while ($skip < 5000) {
+        while ($skip < (5000 * $cycle)) {
             $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('starttime', 'ASC')->offset($skip)->limit(500)->get();
             $skip += 500;
 
@@ -176,9 +180,7 @@ class StatisticsController extends Controller
         // prx($stats);
 
 
-
-
-        return response()->json(['stats' => $playlists]);
+        return response()->json(['stats' => $playlists, 'totalCount' => $totalCount, 'cycle' => $cycle]);
     }
 
     public function StatisticsListeners(Request $request)
