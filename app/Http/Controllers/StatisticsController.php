@@ -88,6 +88,9 @@ class StatisticsController extends Controller
                 foreach ($user_tracks as $track) {
                     if ($track->title == $title && !$found) {
                         $album_data->raw_meta = $stat->name;
+                        $album_data->title = $track->title;
+                        $album_data->artist_name = $track->artist_name;
+                        $album_data->album_name = $track->album_name;
                         $album_data->comments = $track->comments;
                         $found = true;
                     }
