@@ -90,6 +90,7 @@ class StatisticsController extends Controller
                         $album_data->raw_meta = $stat->name;
                         $album_data->comments = $track->comments;
                         array_push($playlists, $album_data);
+                        $found = true;
                     }
                 }
                 if (!$found) {
