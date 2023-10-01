@@ -92,6 +92,7 @@ class StatisticsController extends Controller
                 }
                 if (!$found) {
                     $album_data->artist_name = $stat->name;
+                    $album_data->raw_meta = $stat->name;
                     $album_data->album_name = null;
                     $album_data->title = $stat->name;
                 }
