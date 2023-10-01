@@ -57,12 +57,12 @@ class StatisticsController extends Controller
         // prx($user_tracks);
 
 
-        $totalCount = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->count();
+        // $totalCount = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->count();
         // prx($user_tracks);
         $skip = 0;
         $playlists = [];
 
-        while ($skip < 2000) {
+        while ($skip < 500) {
             $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('starttime', 'ASC')->skip($skip)->limit(500)->get();
             $skip += 500;
 
