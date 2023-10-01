@@ -62,9 +62,9 @@ class StatisticsController extends Controller
         $skip = 0;
         $playlists = [];
 
-        while ($skip < 2000) {
-            $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('starttime', 'ASC')->skip($skip)->limit(1000)->get();
-            $skip += 1000;
+        while ($skip < 5) {
+            $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('starttime', 'ASC')->skip($skip)->limit(10)->get();
+            $skip += 10;
 
             foreach ($stats as $key => $stat) {
                 $title = null;
