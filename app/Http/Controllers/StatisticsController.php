@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PlaybackstatsTracks;
 use App\Models\Playlists;
 use App\Models\Track;
 use App\Models\TrackHistory;
@@ -23,6 +24,97 @@ class StatisticsController extends Controller
         $result = json_decode($json, true);
         $account = DB::table('accounts')->first();
         dd($result);
+    }
+
+    public function Download(Request $request)
+    {
+        set_time_limit(3000000);
+
+        $request->validate([
+            'account_id' => 'required'
+        ]);
+        $account_id = $request->account_id ? $request->account_id : null;
+
+        $startDate = null;
+        $endDate = null;
+        if (isset($request->from_date) && $request->from_date != null && isset($request->to_date) && $request->to_date != null) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $request->from_date)->startOfDay();
+            $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
+        }
+
+        $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->get();
+
+        // $stats = DB::table('playbackstats_tracks')
+        //     ->where(['playbackstats_tracks.accountid' => $request->account_id])
+        //     ->whereBetween('playbackstats_tracks.starttime', [$startDate, $endDate])
+        //     ->join('tracks', 'tracks.title', 'LIKE', 'playbackstats_tracks.name')
+        //     ->orderBy('playbackstats_tracks.starttime', 'ASC')
+        //     ->limit(2)
+        //     ->get();
+
+
+        // $stats = DB::table('playbackstats_tracks')
+        //     ->whereBetween('playbackstats_tracks.starttime', [$startDate, $endDate])
+        //     ->where(['playbackstats_tracks.accountid' => $account_id])
+        //     ->join('tracks', function ($join) {
+        //         $raw_name = explode("-", 'playbackstats_tracks.name');
+        //         prx($join);
+        //         $title = null;
+        //         if (isset($raw_name[1])) {
+        //             $title = trim($raw_name[1]);
+        //         }
+        //         $join->on(DB::raw(), '=', 'tracks.accountid')->where('tracks.title', '=', $title);
+        //         $join->on('playbackstats_tracks.accountid', '=', 'tracks.accountid')->where('tracks.title', '=', $title);
+        //     })
+        //     ->select('tracks.title', 'tracks.comments', 'tracks.albumid', 'tracks.artistid', 'playbackstats_tracks.name')
+        //     ->orderBy('starttime', 'ASC')
+        //     ->limit(2)->get();
+
+        // $stats = DB::table('playbackstats_tracks')
+        //     ->where(['playbackstats_tracks.accountid' => $account_id])
+        //     ->whereBetween('playbackstats_tracks.starttime', [$startDate, $endDate])
+        //     ->orderBy('starttime', 'ASC')
+        //     ->join('tracks', 'tracks.title', '=', explode("-", 'playbackstats_tracks.name')[0])
+        //     ->limit(2)->get();
+
+        // prx($stats);
+
+
+        $playlists = [];
+        foreach ($stats as $key => $stat) {
+            // if ($key == 0) {
+            //     continue;
+            // }
+            $title = null;
+            $raw_name = explode("-", $stat->name);
+
+            if (isset($raw_name[1])) {
+                $title = trim($raw_name[1]);
+            }
+            $album_data = DB::table('tracks')
+                ->leftJoin('track_albums', 'tracks.albumid', '=', 'track_albums.id')
+                ->leftJoin('track_artists', 'tracks.artistid', '=', 'track_artists.id')
+                ->where([
+                    'tracks.title' => $title,
+                    'tracks.accountid' => $request->account_id
+                ])
+                ->select('tracks.title', 'tracks.comments', 'tracks.albumid', 'tracks.artistid', 'track_albums.name as album_name', 'track_artists.name as artist_name')->first();
+            if (!$album_data) {
+                $album_data = (object)[];
+                $album_data->artist_name = $stat->name;
+                $album_data->album_name = null;
+                $album_data->title = $stat->name;
+            }
+            $album_data->raw_meta = $stat->name;
+            $album_data->duration = $stat->duration;
+            $album_data->starttime = $stat->starttime;
+            $album_data->endtime = $stat->endtime;
+            $album_data->listeners = $stat->listeners;
+
+            array_push($playlists, $album_data);
+        }
+
+        return response()->json(['stats' => $playlists]);
     }
 
     public function StatisticsListeners(Request $request)
@@ -138,8 +230,6 @@ class StatisticsController extends Controller
         $tunedListeners = [];
         $listenersCountryWise = [];
         $listenersUserAgentWise = [];
-
-
 
         foreach ($obj->LISTENERS->LISTENER as $listener) {
             $location = json_decode(file_get_contents("http://ipinfo.io/{$listener->HOSTNAME}/json"));
