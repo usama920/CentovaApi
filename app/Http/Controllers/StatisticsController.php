@@ -81,10 +81,12 @@ class StatisticsController extends Controller
                 $album_data->starttime = $stat->starttime;
                 $album_data->endtime = $stat->endtime;
                 $album_data->listeners = $stat->listeners;
+                $album_data->comments = null;
 
                 foreach ($user_tracks as $track) {
                     if ($track->title == $title && !$found) {
                         $album_data->raw_meta = $stat->name;
+                        $album_data->comments = $track->comments;
                         array_push($playlists, $album_data);
                     }
                 }
