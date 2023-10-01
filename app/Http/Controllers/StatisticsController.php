@@ -81,37 +81,37 @@ class StatisticsController extends Controller
 
 
         $playlists = [];
-        // foreach ($stats as $key => $stat) {
-        //     $title = null;
-        //     $raw_name = explode("-", $stat->name);
+        foreach ($stats as $key => $stat) {
+            $title = null;
+            $raw_name = explode("-", $stat->name);
 
-        //     if (isset($raw_name[1])) {
-        //         $title = trim($raw_name[1]);
-        //     }
-        //     $album_data = DB::table('tracks')
-        //         ->leftJoin('track_albums', 'tracks.albumid', '=', 'track_albums.id')
-        //         ->leftJoin('track_artists', 'tracks.artistid', '=', 'track_artists.id')
-        //         ->where([
-        //             'tracks.title' => $title,
-        //             'tracks.accountid' => $request->account_id
-        //         ])
-        //         ->select('tracks.title', 'tracks.comments', 'tracks.albumid', 'tracks.artistid', 'track_albums.name as album_name', 'track_artists.name as artist_name')->first();
-        //     if (!$album_data) {
-        //         $album_data = (object)[];
-        //         $album_data->artist_name = $stat->name;
-        //         $album_data->album_name = null;
-        //         $album_data->title = $stat->name;
-        //     }
-        //     $album_data->raw_meta = $stat->name;
-        //     $album_data->duration = $stat->duration;
-        //     $album_data->starttime = $stat->starttime;
-        //     $album_data->endtime = $stat->endtime;
-        //     $album_data->listeners = $stat->listeners;
+            if (isset($raw_name[1])) {
+                $title = trim($raw_name[1]);
+            }
+            $album_data = DB::table('tracks')
+                ->leftJoin('track_albums', 'tracks.albumid', '=', 'track_albums.id')
+                ->leftJoin('track_artists', 'tracks.artistid', '=', 'track_artists.id')
+                ->where([
+                    'tracks.title' => $title,
+                    'tracks.accountid' => $request->account_id
+                ])
+                ->select('tracks.title', 'tracks.comments', 'tracks.albumid', 'tracks.artistid', 'track_albums.name as album_name', 'track_artists.name as artist_name')->first();
+            if (!$album_data) {
+                $album_data = (object)[];
+                $album_data->artist_name = $stat->name;
+                $album_data->album_name = null;
+                $album_data->title = $stat->name;
+            }
+            $album_data->raw_meta = $stat->name;
+            $album_data->duration = $stat->duration;
+            $album_data->starttime = $stat->starttime;
+            $album_data->endtime = $stat->endtime;
+            $album_data->listeners = $stat->listeners;
 
-        //     array_push($playlists, $album_data);
-        // }
+            array_push($playlists, $album_data);
+        }
 
-        return response()->json(['stats' => $stats]);
+        return response()->json(['stats' => $playlists]);
     }
 
     public function StatisticsListeners(Request $request)
