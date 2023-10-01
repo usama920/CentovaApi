@@ -59,7 +59,7 @@ class StatisticsController extends Controller
 
         $cycle = $request->cycle ? $request->cycle : 1;
         if ($cycle > 1) {
-            $skip = 5000 * ($cycle - 1);
+            $skip = 2000 * ($cycle - 1);
         } else {
             $skip = 0;
         }
@@ -68,7 +68,7 @@ class StatisticsController extends Controller
         // $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('starttime', 'ASC')->skip(10)->limit(10)->get();
         // prx($stats);
 
-        while ($skip < (5000 * $cycle)) {
+        while ($skip < (2000 * $cycle)) {
             $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('starttime', 'ASC')->offset($skip)->limit(500)->get();
             $skip += 500;
 
