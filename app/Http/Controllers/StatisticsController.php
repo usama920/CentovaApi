@@ -134,7 +134,6 @@ class StatisticsController extends Controller
                 array_push($playlists, $album_data);
             }
         }
-        prx($skip);
 
         // $stats = DB::table('playbackstats_tracks')
         //     ->where(['playbackstats_tracks.accountid' => $request->account_id])
