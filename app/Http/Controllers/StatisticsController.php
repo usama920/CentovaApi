@@ -53,7 +53,7 @@ class StatisticsController extends Controller
 
         $performance = [];
         $stats = PlaybackstatsTracks::whereMonth('starttime', $request->month)
-            ->whereYear('starttime', $request->year)->where(['accountid' => $account_id])->orderBy('name', 'ASC')->groupBy('name')->select('name', DB::raw('count(*) as frequency'), DB::raw('sum(duration) as totalDuration'), 'duration', DB::raw('max(duration) as maxDuration'))->get();
+            ->whereYear('starttime', $request->year)->where(['accountid' => $account_id])->orderBy('name', 'ASC')->groupBy('name')->select('name', DB::raw('count(*) as frequency'), DB::raw('sum(duration) as totalDuration'), 'duration', DB::raw('max(duration) as maxDuration'), DB::raw('sum(listeners) as totalListeners'), 'listeners')->get();
 
         // prx($stats);
 
@@ -70,9 +70,9 @@ class StatisticsController extends Controller
 
             $album_data->duration = $stat->maxDuration;
             $album_data->listeners = $stat->listeners;
+            $album_data->totalListeners = $stat->totalListeners;
             $album_data->frequency = $stat->frequency;
             $album_data->comments = null;
-            $album_data->performance = null;
             $album_data->pathname = null;
 
             foreach ($user_tracks as $track) {
