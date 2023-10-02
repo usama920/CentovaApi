@@ -29,6 +29,7 @@ class StatisticsController extends Controller
     public function Download(Request $request)
     {
         set_time_limit(600);
+        ini_set('memory_limit', '128M');
 
         $request->validate([
             'account_id' => 'required'
@@ -68,116 +69,82 @@ class StatisticsController extends Controller
         // $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('starttime', 'ASC')->skip(10)->limit(10)->get();
         // prx($stats);
 
-        while ($skip < (2000 * $cycle)) {
-            $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('starttime', 'ASC')->offset($skip)->limit(500)->get();
-            $skip += 500;
+        // while ($skip < (2000 * $cycle)) {
+        $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('starttime', 'ASC')->get();
+        $skip += 500;
 
-            foreach ($stats as $stat) {
-                $title = null;
-                $raw_name = explode("-", $stat->name);
+        foreach ($stats as $stat) {
+            $title = null;
+            $raw_name = explode("-", $stat->name);
 
-                if (isset($raw_name[1])) {
-                    $title = trim($raw_name[1]);
-                }
-
-                $found = false;
-                $album_data = (object)[];
-
-                $album_data->duration = $stat->duration;
-                $album_data->starttime = $stat->starttime;
-                $album_data->endtime = $stat->endtime;
-                $album_data->listeners = $stat->listeners;
-                $album_data->comments = null;
-
-                foreach ($user_tracks as $track) {
-                    if ($track->title == $title && !$found) {
-                        $album_data->raw_meta = $stat->name;
-                        $album_data->title = $track->title;
-                        $album_data->artist_name = $track->artist_name;
-                        $album_data->album_name = $track->album_name;
-                        $album_data->comments = $track->comments;
-                        $found = true;
-                    }
-                }
-                if (!$found) {
-                    $album_data->artist_name = $stat->name;
-                    $album_data->raw_meta = $stat->name;
-                    $album_data->album_name = null;
-                    $album_data->title = $stat->name;
-                }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                // $album_data = DB::table('tracks')
-                //     ->leftJoin('track_albums', 'tracks.albumid', '=', 'track_albums.id')
-                //     ->leftJoin('track_artists', 'tracks.artistid', '=', 'track_artists.id')
-                //     ->where([
-                //         'tracks.title' => $title,
-                //         'tracks.accountid' => $request->account_id
-                //     ])
-                //     ->select('tracks.title', 'tracks.comments', 'tracks.albumid', 'tracks.artistid', 'track_albums.name as album_name', 'track_artists.name as artist_name')->first();
-                // if (!$album_data) {
-                //     $album_data = (object)[];
-                //     $album_data->artist_name = $stat->name;
-                //     $album_data->album_name = null;
-                //     $album_data->title = $stat->name;
-                // }
-                // $album_data->raw_meta = $stat->name;
-                // $album_data->duration = $stat->duration;
-                // $album_data->starttime = $stat->starttime;
-                // $album_data->endtime = $stat->endtime;
-                // $album_data->listeners = $stat->listeners;
-
-                array_push($playlists, $album_data);
+            if (isset($raw_name[1])) {
+                $title = trim($raw_name[1]);
             }
+
+            $found = false;
+            $album_data = (object)[];
+
+            $album_data->duration = $stat->duration;
+            $album_data->starttime = $stat->starttime;
+            $album_data->endtime = $stat->endtime;
+            $album_data->listeners = $stat->listeners;
+            $album_data->comments = null;
+
+            foreach ($user_tracks as $track) {
+                if ($track->title == $title && !$found) {
+                    $album_data->raw_meta = $stat->name;
+                    $album_data->title = $track->title;
+                    $album_data->artist_name = $track->artist_name;
+                    $album_data->album_name = $track->album_name;
+                    $album_data->comments = $track->comments;
+                    $found = true;
+                }
+            }
+            if (!$found) {
+                $album_data->artist_name = $stat->name;
+                $album_data->raw_meta = $stat->name;
+                $album_data->album_name = null;
+                $album_data->title = $stat->name;
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            // $album_data = DB::table('tracks')
+            //     ->leftJoin('track_albums', 'tracks.albumid', '=', 'track_albums.id')
+            //     ->leftJoin('track_artists', 'tracks.artistid', '=', 'track_artists.id')
+            //     ->where([
+            //         'tracks.title' => $title,
+            //         'tracks.accountid' => $request->account_id
+            //     ])
+            //     ->select('tracks.title', 'tracks.comments', 'tracks.albumid', 'tracks.artistid', 'track_albums.name as album_name', 'track_artists.name as artist_name')->first();
+            // if (!$album_data) {
+            //     $album_data = (object)[];
+            //     $album_data->artist_name = $stat->name;
+            //     $album_data->album_name = null;
+            //     $album_data->title = $stat->name;
+            // }
+            // $album_data->raw_meta = $stat->name;
+            // $album_data->duration = $stat->duration;
+            // $album_data->starttime = $stat->starttime;
+            // $album_data->endtime = $stat->endtime;
+            // $album_data->listeners = $stat->listeners;
+
+            array_push($playlists, $album_data);
         }
+        // }
 
-        // $stats = DB::table('playbackstats_tracks')
-        //     ->where(['playbackstats_tracks.accountid' => $request->account_id])
-        //     ->whereBetween('playbackstats_tracks.starttime', [$startDate, $endDate])
-        //     ->join('tracks', 'tracks.title', 'LIKE', 'playbackstats_tracks.name')
-        //     ->orderBy('playbackstats_tracks.starttime', 'ASC')
-        //     ->limit(2)
-        //     ->get();
-
-
-        // $stats = DB::table('playbackstats_tracks')
-        //     ->whereBetween('playbackstats_tracks.starttime', [$startDate, $endDate])
-        //     ->where(['playbackstats_tracks.accountid' => $account_id])
-        //     ->join('tracks', function ($join) {
-        //         $raw_name = explode("-", 'playbackstats_tracks.name');
-        //         prx($join);
-        //         $title = null;
-        //         if (isset($raw_name[1])) {
-        //             $title = trim($raw_name[1]);
-        //         }
-        //         $join->on(DB::raw(), '=', 'tracks.accountid')->where('tracks.title', '=', $title);
-        //         $join->on('playbackstats_tracks.accountid', '=', 'tracks.accountid')->where('tracks.title', '=', $title);
-        //     })
-        //     ->select('tracks.title', 'tracks.comments', 'tracks.albumid', 'tracks.artistid', 'playbackstats_tracks.name')
-        //     ->orderBy('starttime', 'ASC')
-        //     ->limit(2)->get();
-
-        // $stats = DB::table('playbackstats_tracks')
-        //     ->where(['playbackstats_tracks.accountid' => $account_id])
-        //     ->whereBetween('playbackstats_tracks.starttime', [$startDate, $endDate])
-        //     ->orderBy('starttime', 'ASC')
-        //     ->join('tracks', 'tracks.title', '=', explode("-", 'playbackstats_tracks.name')[0])
-        //     ->limit(2)->get();
-
-        // prx($stats);
 
 
         return response()->json(['stats' => $playlists, 'totalCount' => $totalCount, 'cycle' => $cycle]);
