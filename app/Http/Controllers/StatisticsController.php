@@ -48,14 +48,10 @@ class StatisticsController extends Controller
         foreach ($user_tracks_query as $track) {
             array_push($user_tracks, $track);
         }
-        // prx($user_tracks);
-
 
         $performance = [];
         $stats = PlaybackstatsTracks::whereMonth('starttime', $request->month)
             ->whereYear('starttime', $request->year)->where(['accountid' => $account_id])->orderBy('name', 'ASC')->groupBy('name')->select('name', DB::raw('count(*) as frequency'), DB::raw('sum(duration) as totalDuration'), 'duration', DB::raw('max(duration) as maxDuration'), DB::raw('sum(listeners) as totalListeners'), 'listeners')->get();
-
-        // prx($stats);
 
         foreach ($stats as $stat) {
             $title = null;
@@ -68,6 +64,12 @@ class StatisticsController extends Controller
             $found = false;
             $album_data = (object)[];
 
+            if ($stat->totalDuration > 0) {
+                $album_data->tlh = round($stat->totalDuration / 3600, 3);
+            } else {
+                $album_data->tlh = 0;
+            }
+            $album_data->totalDuration = $stat->totalDuration;
             $album_data->duration = $stat->maxDuration;
             $album_data->listeners = $stat->listeners;
             $album_data->totalListeners = $stat->totalListeners;
@@ -141,6 +143,12 @@ class StatisticsController extends Controller
 
             $found = false;
             $album_data = (object)[];
+
+            if ($stat->duration > 0) {
+                $album_data->tlh = round($stat->duration / 3600, 3);
+            } else {
+                $album_data->tlh = 0;
+            }
 
             $album_data->duration = $stat->duration;
             $album_data->starttime = $stat->starttime;
