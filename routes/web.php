@@ -23,7 +23,8 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::post('/trylogin', [LoginController::class, 'TryLogin']);
-Route::post('/download', [StatisticsController::class, 'Download']);
+Route::post('/playlist/download', [StatisticsController::class, 'PlaylistDownload']);
+Route::post('/performance/download', [StatisticsController::class, 'PerformanceDownload']);
 
 Route::post('/getAccount', [LoginController::class, 'GetAccount']);
 Route::post('/updateAccount', [LoginController::class, 'UpdateAccount']);

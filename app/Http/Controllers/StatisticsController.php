@@ -25,8 +25,81 @@ class StatisticsController extends Controller
         $account = DB::table('accounts')->first();
         dd($result);
     }
+    public function PerformanceDownload(Request $request)
+    {
+        ini_set('memory_limit', '128M');
 
-    public function Download(Request $request)
+        $request->validate([
+            'account_id' => 'required',
+            'month' => 'required',
+            'year' => 'required'
+        ]);
+        $account_id = $request->account_id ? $request->account_id : null;
+
+        $user_tracks = [];
+        $user_tracks_query = DB::table('tracks')
+            ->leftJoin('track_albums', 'tracks.albumid', '=', 'track_albums.id')
+            ->leftJoin('track_artists', 'tracks.artistid', '=', 'track_artists.id')
+            ->where([
+                'tracks.accountid' => $request->account_id
+            ])
+            ->select('tracks.title', 'tracks.comments', 'tracks.albumid', 'tracks.artistid', 'track_albums.name as album_name', 'track_artists.name as artist_name', 'tracks.pathname')->get();
+
+        foreach ($user_tracks_query as $track) {
+            array_push($user_tracks, $track);
+        }
+        // prx($user_tracks);
+
+
+        $performance = [];
+        $stats = PlaybackstatsTracks::whereMonth('starttime', $request->month)
+            ->whereYear('starttime', $request->year)->where(['accountid' => $account_id])->orderBy('name', 'ASC')->groupBy('name')->select('name', DB::raw('count(*) as frequency'), DB::raw('sum(duration) as totalDuration'), 'duration', DB::raw('max(duration) as maxDuration'))->get();
+
+        // prx($stats);
+
+        foreach ($stats as $stat) {
+            $title = null;
+            $raw_name = explode("-", $stat->name);
+
+            if (isset($raw_name[1])) {
+                $title = trim($raw_name[1]);
+            }
+
+            $found = false;
+            $album_data = (object)[];
+
+            $album_data->duration = $stat->maxDuration;
+            $album_data->listeners = $stat->listeners;
+            $album_data->frequency = $stat->frequency;
+            $album_data->comments = null;
+            $album_data->performance = null;
+            $album_data->pathname = null;
+
+            foreach ($user_tracks as $track) {
+                if ($track->title == $title && !$found) {
+                    $album_data->raw_meta = $stat->name;
+                    $album_data->title = $track->title;
+                    $album_data->artist_name = $track->artist_name;
+                    $album_data->album_name = $track->album_name;
+                    $album_data->comments = $track->comments;
+                    $album_data->pathname = $track->pathname;
+
+                    $found = true;
+                }
+            }
+            if (!$found) {
+                $album_data->artist_name = $stat->name;
+                $album_data->raw_meta = $stat->name;
+                $album_data->album_name = null;
+                $album_data->title = $stat->name;
+            }
+            array_push($performance, $album_data);
+        }
+
+        return response()->json(['stats' => $performance]);
+    }
+
+    public function PlaylistDownload(Request $request)
     {
         set_time_limit(600);
         ini_set('memory_limit', '128M');
