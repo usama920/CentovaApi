@@ -38,13 +38,6 @@ class StatisticsController extends Controller
         ]);
         $account_id = $request->account_id ? $request->account_id : null;
 
-        $startDate = null;
-        $endDate = null;
-        if (isset($request->from_date) && $request->from_date != null && isset($request->to_date) && $request->to_date != null) {
-            $startDate = Carbon::createFromFormat('Y-m-d', $request->from_date)->startOfDay();
-            $endDate = Carbon::createFromFormat('Y-m-d', $request->to_date)->endOfDay();
-        }
-
         $user_tracks = [];
         $user_tracks_query = DB::table('tracks')
             ->leftJoin('track_albums', 'tracks.albumid', '=', 'track_albums.id')
@@ -62,8 +55,8 @@ class StatisticsController extends Controller
             ->whereYear('starttime', $request->year)->where(['accountid' => $account_id])->count();
 
         $playlists = [];
-        $stats = PlaybackstatsTracks::whereBetween('starttime', [$startDate, $endDate])->where(['accountid' => $account_id])->orderBy('starttime', 'ASC')->get();
-        $skip += 500;
+        $stats = PlaybackstatsTracks::whereMonth('starttime', $request->month)
+            ->whereYear('starttime', $request->year)->where(['accountid' => $account_id])->orderBy('starttime', 'ASC')->get();
 
         foreach ($stats as $stat) {
             $title = null;
@@ -101,7 +94,7 @@ class StatisticsController extends Controller
             array_push($playlists, $album_data);
         }
 
-        return response()->json(['stats' => $playlists, 'totalCount' => $totalCount, 'cycle' => $cycle]);
+        return response()->json(['stats' => $playlists, 'totalCount' => $totalCount]);
     }
 
     public function StatisticsListeners(Request $request)
