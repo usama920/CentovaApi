@@ -9,6 +9,7 @@ class Track extends Model
 {
     use HasFactory;
     protected $table = 'tracks';
+    public $timestamps = false;
 
     protected $fillable = [
         'accountid',

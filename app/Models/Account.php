@@ -13,6 +13,9 @@ class Account extends Model
 
     protected $fillable = [
         'id',
-        'appwrite_id'
+        'appwrite_id',
+        'forgot_password_code',
+        'forgot_password_status',
+        'forgot_password_time'
     ];
 }

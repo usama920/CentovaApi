@@ -10,6 +10,7 @@ class Playlists extends Model
 {
     use HasFactory;
     protected $table = 'playlists';
+    public $timestamps = false;
 
     protected $fillable = [
         'id',

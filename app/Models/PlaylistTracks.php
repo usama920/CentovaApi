@@ -9,6 +9,7 @@ class PlaylistTracks extends Model
 {
     use HasFactory;
     protected $table = 'playlist_tracks';
+    public $timestamps = false;
 
     protected $fillable = [
         'id',
@@ -19,6 +20,10 @@ class PlaylistTracks extends Model
     public function sectionsCountRelation()
     {
         return $this->hasOne(Playlists::class, 'id', 'playlistid')->selectRaw('id, count(*) as count')->groupBy('playlist_id');
-        // replace module_id with appropriate foreign key if needed
+    }
+
+    public function tracks()
+    {
+        return $this->hasMany(Track::class, 'id', 'trackid');
     }
 }

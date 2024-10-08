@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Throwable;
 
 class StatisticsController extends Controller
@@ -285,57 +286,70 @@ class StatisticsController extends Controller
         ]);
         $account_id = $request->account_id ? $request->account_id : null;
 
-        $url  = "http://admin:$request->password@51.81.208.185:8800/admin.cgi?sid=1&mode=viewxml&page=3";
-
-        $obj  = json_decode(json_encode(simplexml_load_file($url)));
         $tunedListeners = [];
         $listenersCountryWise = [];
         $listenersUserAgentWise = [];
 
-        foreach ($obj->LISTENERS->LISTENER as $listener) {
-            $location = json_decode(file_get_contents("http://ipinfo.io/{$listener->HOSTNAME}/json"));
+        if ($request->serverType == "ShoutCast2") {
+            $url  = "http://admin:$request->password@nap.casthost.net:8800/admin.cgi?sid=1&mode=viewxml&page=3";
 
-            if ($location) {
-                $newArray = [
-                    'ip' => $listener->HOSTNAME,
-                    'userAgent' => $listener->USERAGENT,
-                    'totalDuration' => $listener->CONNECTTIME,
-                    'country' => $location->country
-                ];
-                array_push($tunedListeners, $newArray);
+            $obj  = json_decode(json_encode(simplexml_load_file($url)));
 
-                $included = false;
-                foreach ($listenersCountryWise as $key => $country) {
-                    if ($country['location'] == $location->country && $included == false) {
-                        $listenersCountryWise[$key]['count'] = $country['count'] + 1;
-                        $included = true;
-                    }
-                }
-                if ($included == false) {
+            foreach ($obj->LISTENERS->LISTENER as $listener) {
+                $location = json_decode(file_get_contents("http://ipinfo.io/{$listener->HOSTNAME}/json"));
+
+                if ($location) {
                     $newArray = [
-                        'location' => $location->country,
-                        'count' => 1
+                        'ip' => $listener->HOSTNAME,
+                        'userAgent' => $listener->USERAGENT,
+                        'totalDuration' => $listener->CONNECTTIME,
+                        'country' => $location->country
                     ];
-                    array_push($listenersCountryWise, $newArray);
-                }
+                    array_push($tunedListeners, $newArray);
 
-                $included = false;
-                $agent = explode(" ", $listener->USERAGENT);
-                foreach ($listenersUserAgentWise as $key => $userAgent) {
-                    if ($userAgent['userAgent'] == $agent[0] && $included == false) {
-                        $listenersUserAgentWise[$key]['count'] = $userAgent['count'] + 1;
-                        $included = true;
+                    $included = false;
+                    foreach ($listenersCountryWise as $key => $country) {
+                        if ($country['location'] == $location->country && $included == false) {
+                            $listenersCountryWise[$key]['count'] = $country['count'] + 1;
+                            $included = true;
+                        }
                     }
-                }
-                if ($included == false) {
-                    $newArray = [
-                        'userAgent' => $agent[0],
-                        'count' => 1
-                    ];
-                    array_push($listenersUserAgentWise, $newArray);
+                    if ($included == false) {
+                        $newArray = [
+                            'location' => $location->country,
+                            'count' => 1
+                        ];
+                        array_push($listenersCountryWise, $newArray);
+                    }
+
+                    $included = false;
+                    $agent = explode(" ", $listener->USERAGENT);
+                    foreach ($listenersUserAgentWise as $key => $userAgent) {
+                        if ($userAgent['userAgent'] == $agent[0] && $included == false) {
+                            $listenersUserAgentWise[$key]['count'] = $userAgent['count'] + 1;
+                            $included = true;
+                        }
+                    }
+                    if ($included == false) {
+                        $newArray = [
+                            'userAgent' => $agent[0],
+                            'count' => 1
+                        ];
+                        array_push($listenersUserAgentWise, $newArray);
+                    }
                 }
             }
+        } else if ($request->serverType == "IceCast") {
+            $response = Http::get('http://nap.casthost.net:8287/admin/listclients.xsl?mount=/stream');
+
+            if ($response->successful()) {
+                $content = $response->body();
+            } else {
+                // Handle error
+                $content = null;
+            }
         }
+
 
         usort($listenersCountryWise, function ($object1, $object2) {
             return $object1['count'] < $object2['count'];
